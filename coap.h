@@ -38,9 +38,9 @@
 #define COAP_TOKEN_OFFS          (COAP_MSGID_OFFS + COAP_MSGID_SZ)
 #define COAP_END_OF_OPTIONS      0xff
 
-#define COAP_OptTAG_OFFS            0
-#define COAP_OptTAG_MASK            0xf0
-#define COAP_OptTAG_SHFT            4
+#define COAP_OptDLT_OFFS            0
+#define COAP_OptDLT_MASK            0xf0
+#define COAP_OptDLT_SHFT            4
 #define COAP_OptLEN_OFFS            0
 #define COAP_OptLEN_MASK            0x0f
 #define COAP_OptLEN_SHFT            0
@@ -50,6 +50,7 @@ typedef enum coap_err_e {
     COAP_INVALID_LENGTH,
     COAP_INVALID_VERSION,
     COAP_INVALID_TKL,
+    COAP_INVALID_FORMAT,
     /* insert error codes before this line */
     COAP_ERR_NBR /* must be the last one */
 } coap_err;
@@ -64,10 +65,10 @@ typedef enum coap_typ_e {
 } coap_typ;
 
 typedef struct coap_opt_s {
-    uint8_t             c_typ;
-    uint16_t            c_len;
-    void               *c_val;
-    struct coap_opt_s  *c_nxt;
+    uint16_t            o_typ;
+    uint16_t            o_len;
+    void               *o_val;
+    struct coap_opt_s  *o_nxt;
 } coap_opt;
 
 typedef struct coap_msg_s {
@@ -78,6 +79,9 @@ typedef struct coap_msg_s {
     uint8_t            *c_tok; /* token content */
     unsigned            c_code; /* packet code */
     unsigned            c_msgid; /* message id */
+    uint8_t            *c_pld; /* payload */
+    size_t              c_pldsz; /* payload size */
+
 } coap_msg;
 
 
