@@ -8,6 +8,7 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include "lists.h"
 
 #define COAP_HDR_LEN             4
 
@@ -51,6 +52,8 @@ typedef enum coap_err_e {
     COAP_INVALID_VERSION,
     COAP_INVALID_TKL,
     COAP_INVALID_FORMAT,
+    COAP_INVALID_OptDLT,
+    COAP_INVALID_OptLEN,
     /* insert error codes before this line */
     COAP_ERR_NBR /* must be the last one */
 } coap_err;
@@ -67,21 +70,22 @@ typedef enum coap_typ_e {
 typedef struct coap_opt_s {
     uint16_t            o_typ;
     uint16_t            o_len;
-    void               *o_val;
+    const uint8_t      *o_val;
     struct coap_opt_s  *o_nxt;
+    LNODE_T             o_nod;
 } coap_opt;
 
 typedef struct coap_msg_s {
-    uint8_t            *c_pktdat; /* packet data (raw) */
+    const uint8_t      *c_pktdat; /* packet data (raw) */
     uint8_t             c_vers; /* version (in host format) */
     coap_typ            c_typ; /* packet type. */
     unsigned            c_tkl; /* token length */
-    uint8_t            *c_tok; /* token content */
+    const uint8_t      *c_tok; /* token content */
     unsigned            c_code; /* packet code */
     unsigned            c_msgid; /* message id */
-    uint8_t            *c_pld; /* payload */
+    const uint8_t      *c_pld; /* payload */
     size_t              c_pldsz; /* payload size */
-
+    LNODE_T             c_opts; /* options list */
 } coap_msg;
 
 

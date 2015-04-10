@@ -6,26 +6,56 @@
 
 #include "coap.h"
 
+#ifndef DEBUG
+#define DEBUG 0
+#endif
+
+#ifndef TRACE
+#define TRACE 1
+#endif
+
+#if DEBUG
+#   include "fprintbuf.h"
+#   define DEB(args...) fprintf(stderr, args)
+#   define PRB(args...) fprintbuf(stderr, args)
+#else
+#   define DEB(args...)
+#   define PRB(args...)
+#endif
+
+#if TRACE
+#   define D(x) __FILE__":%d:%s: " x, __LINE__, __func__
+#else
+#   define D(x) x
+#endif
+
 #define CHK(N) do{\
-        if (bufsz < (N)) {\
+        size_t n = (N);\
+        DEB(D("CHK(%d bytes);\n"), n);\
+        if (bufsz < n) {\
+            DEB(D("RETURN ==> COAP_INVALID_LENGTH(have=%d, req=%d\n"),\
+                    bufsz, n);\
             return COAP_INVALID_LENGTH;\
         }\
     }while(0)
 
 #define ACT(N) do{\
-        size_t n=(N);\
-        buff+=n;\
-        bufsz-=n;\
+        size_t n = (N);\
+        DEB(D("ACT(%d bytes);\n"), n);\
+        buff  += n;\
+        bufsz -= n;\
     }while(0)
 
 static uint32_t
-parse_unsigned(uint8_t *buff, size_t bufsz)
+parse_unsigned(const uint8_t *buff, size_t bufsz)
 {
     uint32_t res = 0;
+    DEB(D("BEGIN\n"));
     while (bufsz--) {
         res <<= 8;
         res |= *buff++;
     } /* while */
+    DEB(D("RETURN ==> %d\n"), res);
     return res;
 } /* parse_unsigned */
    
@@ -34,11 +64,34 @@ coap_msg_init(
         coap_msg *tgt)
 {
     static coap_msg src = {0};
+    DEB(D("BEGIN\n"));
 
     *tgt = src;
 
+    DEB(D("RETURN ==> COAP_OK\n"));
     return COAP_OK;
 } /* coap_msg_init */
+
+/* The next macro is to process the Options of a CoAP message.
+ * It acts on the values taken from the OptDelta and OptLength
+ * fields of the first byte from the option field. */
+#define SWITCH(var)  do{\
+        switch(var) { \
+        case 15: \
+            DEB(D("RETURN COAP_INVALID_"#var"\n")); \
+            return COAP_INVALID_##var; \
+        case 14: \
+            /* two bytes of data */ \
+            CHK(2); \
+            var = 256 + 13 + parse_unsigned(buff, 2); \
+            ACT(2); \
+        case 13: /* one byte of delta */ \
+            CHK(1); \
+            var = 13 + parse_unsigned(buff, 1); \
+            ACT(1); \
+            break; \
+        } /* switch */\
+    } while(0)
 
 coap_err
 coap_parse(
@@ -47,6 +100,9 @@ coap_parse(
         coap_msg       *tgt)
 {
     uint32_t opt_name = 0;
+
+    DEB(D("BEGIN\n"));
+    PRB(bufsz, buff, D("PACKET (size = %d bytes)"), bufsz);
 
 #define VALUEOF(T) ((buff[COAP_##T##_OFFS] & COAP_##T##_MASK) \
         >> COAP_##T##_SHFT)
@@ -58,16 +114,20 @@ coap_parse(
     tgt->c_pktdat = buff; /* pointer to packet data */
 
     /* check the packet version */
-    if (VALUEOF(VERS) != COAP_VERS_VALUE)
+    if (VALUEOF(VERS) != COAP_VERS_VALUE) {
+        DEB(D("==> COAP_INVALID_VERSION\n"));
         return COAP_INVALID_VERSION;
+    } /* if */
     tgt->c_vers = COAP_VERS_VALUE;
 
     /* packet type */
     tgt->c_typ  = VALUEOF(TYPE);
 
     /* TKL */
-    if ((tgt->c_tkl = VALUEOF(TKL)) > COAP_TYPE_MAX)
+    if ((tgt->c_tkl = VALUEOF(TKL)) > COAP_TKL_MAX) {
+        DEB(D("==> COAP_INVALID_TKL(%d)\n"), tgt->c_tkl);
         return COAP_INVALID_TKL;
+    } /* if */
 
     /* Code */
     tgt->c_code = VALUEOF(CODE);
@@ -82,7 +142,7 @@ coap_parse(
     tgt->c_tok = buff;
     ACT(tgt->c_tkl);
 
-    while(buffsz) { /* process options */
+    while(bufsz) { /* process options */
         size_t OptDLT, OptLEN;
         coap_opt *opt;
         /* no need to CHK(1); as we got into the loop */
@@ -94,38 +154,31 @@ coap_parse(
             tgt->c_pldsz = bufsz;
             break;
         } /* if */
+
         /* buff[0] != COAP_END_OF_OPTIONS */
         OptDLT = VALUEOF(OptDLT);
         OptLEN = VALUEOF(OptLEN);
         ACT(1); /* advance */
 
-#define SWITCH(var)  do{\
-        switch(var) { \
-        case 15: \
-            return COAP_INVALID_##v; \
-        case 14: \
-            /* two bytes of data */ \
-            CHK(2); \
-            var = 269 + parse_unsigned(buff, 2); \
-            ACT(2); \
-        case 13: /* one byte of delta */ \
-            CHK(1); \
-            var = 13 + parse_unsigned(buff, 1); \
-            ACT(1); \
-            break; \
-        } /* switch */\
-    } while(0)
-
+        /* see macro defined before this function */
         SWITCH(OptDLT); /* process Delta */
         SWITCH(OptLEN); /* process Length */
+
         CHK(OptLEN);
+
         assert(opt = malloc(sizeof(coap_opt)));
+
         opt_name += OptDLT;
         opt->o_typ = opt_name;
         opt->o_len = OptLEN;
         opt->o_val = buff;
 
-        ACT(len);
+        LIST_APPEND(&tgt->c_opts, &opt->o_nod);
+
+        ACT(OptLEN);
     } /* while */
 
+    DEB(D("RETURN ==> COAP_OK\n"));
+
+    return COAP_OK;
 } /* coap_parse */
