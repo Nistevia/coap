@@ -6,35 +6,30 @@
 #ifndef _COAP_H
 #define _COAP_H
 
+#include <stdlib.h>
 #include <stdint.h>
-#include <string.h>
 
-#define COAP_HDR_LEN        4
+#define COAP_HDR_LEN             4
 
-#define COAP_VERS_OFFSET    0
-#define COAP_VERS_MASK      0xc0
-#define COAP_VERS_SHFT      6
-#define COAP_VERS_VALUE     0x1
+#define COAP_VERS_OFFSET         0
+#define COAP_VERS_MASK           0xc0
+#define COAP_VERS_SHFT           6
+#define COAP_VERS_VALUE          0x1
 #define COAP_VERS_OK(c)     (((c) & COAP_VERS_MASK) \
         ==(COAP_VERS_VALUE << COAP_VERS_SHFT))
 
-#define COAP_TYPE_OFFSET    0
-#define COAP_TYPE_MASK      0x30
-#define COAP_TYPE_SHFT      4
+#define COAP_TYPE_OFFSET         0
+#define COAP_TYPE_MASK           0x30
+#define COAP_TYPE_SHFT           4
 
-#define COAP_TKL_OFFSET     0
-#define COAP_TKL_MASK       0x0f
-#define COAP_TKL_SHFT       0
-#define COAP_TKL_NBR        9
+#define COAP_TKL_OFFSET          0
+#define COAP_TKL_MASK            0x0f
+#define COAP_TKL_SHFT            0
+#define COAP_TKL_NBR             9
 
-#define COAP_CODE_OFFSET    1
-#define COAP_MSGID_OFFSET   2
-#define COAP_TOKEN_OFFSET   4
-
-#define COAP_OK                 0
-#define COAP_INVALID_LENGTH     -1
-#define COAP_INVALID_VERSION    -2
-#define COAP_
+#define COAP_CODE_OFFSET         1
+#define COAP_MSGID_OFFSET        2
+#define COAP_TOKEN_OFFSET        4
 
 typedef enum coap_err_e {
     COAP_OK=0,
@@ -71,24 +66,28 @@ typedef struct coap_msg_s {
     unsigned            c_msgid; /* message id */
 } coap_msg;
 
+
 coap_err
 coap_msg_init(
-        coap_msg *tgt)
+        coap_msg *tgt);
 {
-    memcpy(tgt, 0, sizeof *tgt);
+    static coap_msg src = {0};
+
+    *tgt = src;
+
     return COAP_OK;
 } /* coap_msg_init */
 
-
+coap_err
 coap_parse(
-        const uint8_t *buff,
-        size_t bufsz,
-        coap_msg *tgt);
+        const uint8_t  *buff,
+        size_t          bufsz,
+        coap_msg       *tgt);
 
-uint8_t *
+coap_err
 coap_code(
         const coap_msg *msg,
         uint8_t        *buff,
-        size_t          bufsz);
+        size_t         *bsz_io);
 
 #endif /* _COAP_H */

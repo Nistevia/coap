@@ -19,6 +19,16 @@
     }while(0)
 
    
+coap_err
+coap_msg_init(
+        coap_msg *tgt)
+{
+    static coap_msg src = {0};
+
+    *tgt = src;
+
+    return COAP_OK;
+} /* coap_msg_init */
 
 coap_err
 coap_parse(
@@ -44,6 +54,5 @@ coap_parse(
     tgt->c_tkl  = (buff[0] & COAP_TKL_MASK);
     tgt->c_typ  = buff[1];
     tgt->c_code = parse_unsigned(buff + COAP_MSGID_OFFSET
-    
 
 } /* coap_parse */
