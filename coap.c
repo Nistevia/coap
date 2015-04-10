@@ -18,6 +18,16 @@
         bufsz-=n;
     }while(0)
 
+static uint32_t
+parse_unsigned(uint8_t *buff, size_t bufsz)
+{
+    uint32_t res = 0;
+    while (bufsz--) {
+        res <<= 8;
+        res |= *buff++;
+    } /* while */
+    return res;
+} /* parse_unsigned */
    
 coap_err
 coap_msg_init(
@@ -37,22 +47,51 @@ coap_parse(
         coap_msg       *tgt)
 {
 
+#define VALUEOF(T) ((buff[COAP_##T##_OFFS] & COAP_##T##_MASK) \
+        >> COAP_##T##_SHFT)
+
+    /* check we have enough buffer to parse */
     CHK(COAP_HDR_LEN);
 
-    coap_msg_init(tgt);
+    coap_msg_init(tgt); /* initialize structure */
     tgt->c_pktdat = buff; /* pointer to packet data */
 
     /* check the packet version */
-    if (!COAP_VERS_OK(buff[COAP_VERS_OFF])) return COAP_INVALID_VERSION;
+    if (VALUEOF(VERS) != COAP_VERS_VALUE)
+        return COAP_INVALID_VERSION;
+    tgt->c_vers = COAP_VERS_VALUE;
 
-    tgt->c_vers = (buff[COAP_VERS_OFF] & COAP_VERS_MASK) >> COAP_VERS_SHFT;
-    tgt->c_typ  = (buff[COAP_TYPE_OFF] & COAP_TYPE_MASK) >> COAP_TYPE_SHFT;
+    /* packet type */
+    tgt->c_typ  = VALUEOF(TYPE);
 
-    if (buff[0] & COAP_TKL_MASK >= COAP_TKL_NBR)
+    /* TKL */
+    if ((tgt->c_tkl = VALUEOF(TKL)) > COAP_TYPE_MAX)
         return COAP_INVALID_TKL;
 
-    tgt->c_tkl  = (buff[0] & COAP_TKL_MASK);
-    tgt->c_typ  = buff[1];
-    tgt->c_code = parse_unsigned(buff + COAP_MSGID_OFFSET
+    /* Code */
+    tgt->c_code = VALUEOF(CODE);
+
+    /* Message ID */
+    tgt->c_msgid = parse_unsigned(buff + COAP_MSGID_OFFS, COAP_MSGID_SZ);
+
+    ACT(COAP_HDR_LEN);
+    CHK(tgt->c_tkl); /* check for space for the token */
+
+    /* token */
+    tgt->c_tok = buff;
+    ACT(tgt->c_tkl);
+
+    while(buffsz) { /* process options */
+        /* no need to CHK(1); as we got into the loop */
+        if (buff[0] == COAP_END_OF_OPTIONS) {
+            ACT(1); /* move the pointer */
+            CHK(1); /* check at leas one byte of payload */
+            tgt->c_pld = buff;
+            tgt->c_pldsz = bufsz;
+            break;
+        } /* if */
+        
+
+    } /* while */
 
 } /* coap_parse */

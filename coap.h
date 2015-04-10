@@ -11,25 +11,39 @@
 
 #define COAP_HDR_LEN             4
 
-#define COAP_VERS_OFFSET         0
+#define COAP_VERS_OFFS           0
 #define COAP_VERS_MASK           0xc0
 #define COAP_VERS_SHFT           6
 #define COAP_VERS_VALUE          0x1
 #define COAP_VERS_OK(c)     (((c) & COAP_VERS_MASK) \
         ==(COAP_VERS_VALUE << COAP_VERS_SHFT))
 
-#define COAP_TYPE_OFFSET         0
+#define COAP_TYPE_OFFS           0
 #define COAP_TYPE_MASK           0x30
 #define COAP_TYPE_SHFT           4
 
-#define COAP_TKL_OFFSET          0
+#define COAP_TKL_OFFS            0
 #define COAP_TKL_MASK            0x0f
 #define COAP_TKL_SHFT            0
-#define COAP_TKL_NBR             9
+#define COAP_TKL_MAX             8
 
-#define COAP_CODE_OFFSET         1
-#define COAP_MSGID_OFFSET        2
-#define COAP_TOKEN_OFFSET        4
+#define COAP_CODE_OFFS           1
+#define COAP_CODE_MASK           0xff
+#define COAP_CODE_SHFT           0
+#define COAP_CODE_SZ             1
+
+#define COAP_MSGID_OFFS          (COAP_CODE_OFFS + COAP_CODE_SZ)
+#define COAP_MSGID_SZ            2
+
+#define COAP_TOKEN_OFFS          (COAP_MSGID_OFFS + COAP_MSGID_SZ)
+#define COAP_END_OF_OPTIONS      0xff
+
+#define COAP_OptTAG_OFFS            0
+#define COAP_OptTAG_MASK            0xf0
+#define COAP_OptTAG_SHFT            4
+#define COAP_OptLEN_OFFS            0
+#define COAP_OptLEN_MASK            0x0f
+#define COAP_OptLEN_SHFT            0
 
 typedef enum coap_err_e {
     COAP_OK=0,
@@ -70,13 +84,6 @@ typedef struct coap_msg_s {
 coap_err
 coap_msg_init(
         coap_msg *tgt);
-{
-    static coap_msg src = {0};
-
-    *tgt = src;
-
-    return COAP_OK;
-} /* coap_msg_init */
 
 coap_err
 coap_parse(
