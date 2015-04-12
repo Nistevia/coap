@@ -1,9 +1,10 @@
-/* coap.c -- implementation for packet coding/decoding.
+/* coap_parse.c -- implementation for packet decoding.
  * Author: Luis Colorado <luis.colorado@ericsson.com>
  * Date: Fri Apr 10 09:54:34 EEST 2015
  * Disclaimer: (C) LUIS COLORADO.  All rights reserved.
  */
 
+#include <assert.h>
 #include "coap.h"
 
 #ifndef DEBUG

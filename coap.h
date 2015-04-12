@@ -100,7 +100,7 @@ coap_parse(
         coap_msg       *tgt);
 
 coap_err
-coap_code(
+coap_encode(
         const coap_msg *msg,
         uint8_t        *buff,
         size_t         *bsz_io);
