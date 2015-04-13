@@ -72,7 +72,6 @@ typedef struct coap_opt_s {
     uint16_t            o_typ;
     uint16_t            o_len;
     const uint8_t      *o_val;
-    struct coap_opt_s  *o_nxt;
     LNODE_T             o_nod;
 } coap_opt;
 
