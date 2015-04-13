@@ -35,6 +35,36 @@ coap_msg_settype(
 } /* coap_msg_settype */
 
 coap_err
+coap_msg_setcode(
+        coap_msg       *tgt,
+        uint8_t        cod)
+{
+    DEB(D("BEGIN(cod=0x%02x)\n"), cod);
+
+    tgt->c_code = cod;
+
+    DEB(D("RETURN ==> COAP_OK\n"));
+
+    return COAP_OK;
+} /* coap_msg_settype */
+
+coap_err
+coap_msg_setpayload(
+        coap_msg       *tgt,
+        uint8_t        *payload,
+        size_t          payloadlen)
+{
+    DEB(D("BEGIN(payloadlen=%d,payload=...)\n"), payloadlen);
+
+    tgt->c_plddat = payload;
+    tgt->c_pldlen = payloadlen;
+
+    DEB(D("RETURN ==> COAP_OK\n"));
+
+    return COAP_OK;
+} /* coap_msg_setpayload */
+
+coap_err
 coap_msg_settoken(
         coap_msg       *tgt,
         uint8_t        *tokdat,

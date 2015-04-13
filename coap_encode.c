@@ -68,9 +68,63 @@ coap_encode(
 
     /* Options */
     LIST_FOREACH_ELEMENT(opt, &msg->c_optslst, coap_opt, o_nod) {
-        size_t OptDLT, OptLEN;
+        size_t DLT = opt->o_typ - optname;
+        size_t LEN = opt->o_len;
+        uint8_t *aux = buff;
+        PRB(opt->o_len, opt->o_val,
+                "OPTION %d, DLT=%d, LEN=%d",
+                opt->o_typ, DLT, LEN);
+        if (DLT < 0) {
+            DEB(D("RETURN ==> COAP_INVALID_PARAMETER(Delta < 0)\n"));
+            return COAP_INVALID_PARAMETER;
+        } /* if */
+        CHK(1);
+        *aux = 0;
+        ACT(1);
+        msg->c_pktlen++;
 
+#define ENCODE(x) do{ \
+        if (x < 13) { \
+            *aux |= (x << COAP_Opt##x##_SHFT) & COAP_Opt##x##_MASK;\
+        } else { \
+            x -= 13; \
+            if (x < 256) {\
+                *aux |= (13 << COAP_Opt##x##_SHFT) & COAP_Opt##x##_MASK;\
+                CHK(1); \
+                *buff = x; \
+                ACT(1); \
+                msg->c_pktlen++;\
+            } else {\
+                x -= 256;\
+                *aux |= (14 << COAP_Opt##x##_SHFT) & COAP_Opt##x##_MASK;\
+                CHK(2);\
+                code_unsigned(x, buff, 2);\
+                ACT(2);\
+                msg->c_pktlen += 2;\
+            } /* if */\
+        } /* if */\
+    } while(0)
+
+        ENCODE(DLT);
+        ENCODE(LEN);
+        if (opt->o_len) {
+            CHK(opt->o_len);
+            memcpy(buff, opt->o_val, opt->o_len);
+            ACT(opt->o_len);
+            msg->c_pktlen += opt->o_len;
+        } /* if */
+
+        optname = opt->o_typ;
     } /* LIST_FOREACH_ELEMENT */
+
+    if (msg->c_pldlen) {
+        CHK(1 + msg->c_pldlen);
+        *buff = COAP_END_OF_OPTIONS;
+        ACT(1);
+        memcpy(buff, msg->c_plddat, msg->c_pldlen);
+        ACT(msg->c_pldlen);
+        msg->c_pktlen += 1 + msg->c_pldlen;
+    } /* if */
 
     return COAP_OK;
 } /* coap_encode */
