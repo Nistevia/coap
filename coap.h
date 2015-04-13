@@ -106,15 +106,21 @@ coap_msg_settype(
         coap_typ        typ);
 
 coap_err
+coap_msg_setcode(
+        coap_msg       *tgt,
+        uint8_t        cod);
+
+coap_err
+coap_msg_setpayload(
+        coap_msg       *tgt,
+        uint8_t        *payload,
+        size_t          payloadlen);
+
+coap_err
 coap_msg_settoken(
         coap_msg       *tgt,
         uint8_t        *tokdat,
         size_t          toklen);
-
-coap_err
-coap_msg_setcode(
-        coap_msg       *tgt,
-        uint8_t         typ);
 
 coap_err
 coap_msg_setmsgid(

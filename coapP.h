@@ -18,8 +18,8 @@
 
 #if DEBUG
 #   include "fprintbuf.h"
-#   define DEB(args...) fprintf(stderr, args)
-#   define PRB(args...) fprintbuf(stderr, args)
+#   define DEB(args...) fprintf(stdout, args)
+#   define PRB(args...) fprintbuf(stdout, args)
 #else
 #   define DEB(args...)
 #   define PRB(args...)

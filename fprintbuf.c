@@ -14,13 +14,16 @@ static char *id = "$Id: fprintbuf.c,v 2.0 2005-10-04 14:54:49 luis Exp $\n";
 
 #define 	TAM_REG		16
 
-int fprintbuf (FILE *f,	/* fichero de salida */
-	int t,			/* tamano del buffer */
-	unsigned char *b,	/* puntero al buffer */
-	char *fmt, ...)		/* rotulo de cabecera */
+size_t
+fprintbuf(
+        FILE           *f,      /* fichero de salida */
+	    int             t,      /* tamano del buffer */
+	    const uint8_t  *b,      /* puntero al buffer */
+	    const char     *fmt,    /* rotulo de cabecera */
+                        ...)
 {
-	int off, i;
-	unsigned char c;
+	size_t off, i;
+	uint8_t c;
 	va_list lista;
 	size_t escritos = 0;
 

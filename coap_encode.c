@@ -72,7 +72,7 @@ coap_encode(
         size_t LEN = opt->o_len;
         uint8_t *aux = buff;
         PRB(opt->o_len, opt->o_val,
-                "OPTION %d, DLT=%d, LEN=%d",
+                D("OPTION %d, DLT=%d, LEN=%d"),
                 opt->o_typ, DLT, LEN);
         if (DLT < 0) {
             DEB(D("RETURN ==> COAP_INVALID_PARAMETER(Delta < 0)\n"));

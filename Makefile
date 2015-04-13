@@ -6,13 +6,14 @@ targets=coap_encode_test
 
 all: $(targets)
 clean:
-	$(RM) $(targets)
+	$(RM) $(targets) $(foreach i, $(targets), $($(i)_objs))
 
 coap_encode_test_objs=coap_encode_test.o coap_encode.o coap_parse.o coap_misc.o fprintbuf.o
 
 coap_encode_test: $(coap_encode_test_objs)
 	$(CC) $(LDFLAGS) $(LDLIBS) -o $@ $(coap_encode_test_objs) $(coap_encode_test_libs)
 
-coap_parse.o: coapP.h coap.h
-coap_encode.o: coapP.h coap.h
-coap_misc.o: coapP.h coap.h
+coap_encode_test.o: coapP.h coap.h fprintbuf.h
+coap_parse.o: coapP.h coap.h fprintbuf.h
+coap_encode.o: coapP.h coap.h fprintbuf.h
+coap_misc.o: coapP.h coap.h fprintbuf.h

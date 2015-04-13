@@ -46,7 +46,7 @@ coap_msg_setcode(
     DEB(D("RETURN ==> COAP_OK\n"));
 
     return COAP_OK;
-} /* coap_msg_settype */
+} /* coap_msg_setcode */
 
 coap_err
 coap_msg_setpayload(
@@ -108,7 +108,7 @@ coap_msg_addopt(
     coap_opt   *last;
     uint16_t    lasttyp;
 
-    DEB(D("BEGIN\n"));
+    DEB(D("BEGIN(opt=%d, len=%d)\n"), opt->o_typ, opt->o_len);
     last = LIST_ELEMENT_LAST(&tgt->c_optslst, coap_opt, o_nod);
     lasttyp = last ? last->o_typ : 0;
     if (opt->o_typ < lasttyp) {
