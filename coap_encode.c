@@ -5,66 +5,57 @@
  */
 
 #include <assert.h>
-#include "coap.h"
+#include <string.h>
 
-#ifndef DEBUG
-#define DEBUG 0
-#endif
+#include "coapP.h"
 
-#ifndef TRACE
-#define TRACE 1
-#endif
-
-#if DEBUG
-#   include "fprintbuf.h"
-#   define DEB(args...) fprintf(stderr, args)
-#   define PRB(args...) fprintbuf(stderr, args)
-#else
-#   define DEB(args...)
-#   define PRB(args...)
-#endif
-
-#if TRACE
-#   define D(x) __FILE__":%d:%s: " x, __LINE__, __func__
-#else
-#   define D(x) x
-#endif
-
-#define CHK(N) do{\
-        size_t n = (N);\
-        DEB(D("CHK(%d bytes);\n"), n);\
-        if (bufsz < n) {\
-            DEB(D("RETURN ==> COAP_INVALID_LENGTH(have=%d, req=%d\n"),\
-                    bufsz, n);\
-            return COAP_INVALID_LENGTH;\
-        }\
-    }while(0)
-
-#define ACT(N) do{\
-        size_t n = (N);\
-        DEB(D("ACT(%d bytes);\n"), n);\
-        buff  += n;\
-        bufsz -= n;\
-    }while(0)
-
-size_t
-coap_encode(
-        const coap_msg *msg,
-        uint8_t        *buff,
-        size_t         *bsz_io)
+static size_t
+code_unsigned(uint32_t val, uint8_t *buff, size_t bufsz)
 {
-    size_t bufsz = *bsz_io;
+    size_t res = bufsz;
+    DEB(D("BEGIN\n"));
+    CHK(bufsz);
+    buff += bufsz;
+    while(bufsz--) {
+        *--buff = val & 0xff;
+        val >>= 8;
+    } /* while */
+    DEB(D("RETURN %d;\n"), res);
+    return res;
+} /* code_unsigned */
+
+coap_err
+coap_encode(
+        coap_msg       *msg,
+        uint8_t        *buff,
+        size_t          bufsz)
+{
+    coap_opt *opt;
+    size_t optname = 0;
 
     DEB(D("BEGIN\n"));
     CHK(COAP_HDR_LEN); /* check we have at least space for header */
 
     msg->c_pktdat = buff;
-    if (COAP_VERS_VALUE != msg->c_vers) {
-        DEB(D("==> COAP_INVALID_VERSION(%d)\n"),
-                msg->c_vers);
-        return COAP_INVALID_VERSION;
-    } /* if */
+    msg->c_pktlen = 0;
 
+    CHK(COAP_HDR_LEN);
+
+    buff[COAP_VERS_OFFS]  = 0;
+    buff[COAP_VERS_OFFS] |= COAP_VERS_VALUE << COAP_VERS_SHFT;
+    buff[COAP_TYPE_OFFS] |= (msg->c_typ << COAP_TYPE_SHFT) & COAP_TYPE_MASK;
+    buff[COAP_TKL_OFFS]  |= msg->c_toklen & COAP_TKL_MASK; /* 0 shift */
+    buff[COAP_CODE_OFFS]  = msg->c_code; /* full byte */
+    code_unsigned(msg->c_msgid, buff + COAP_MSGID_OFFS, COAP_MSGID_SZ);
+    ACT(COAP_TOKEN_OFFS);
+    CHK(msg->c_toklen);
+    memcpy(buff, msg->c_tokdat, msg->c_toklen);
+    ACT(msg->c_toklen);
+
+    LIST_FOREACH_ELEMENT(opt, &msg->c_optslst, coap_opt, o_nod) {
+        size_t OptDLT, OptLEN;
+
+    } /* LIST_FOREACH_ELEMENT */
 
     return COAP_OK;
 } /* coap_encode */

@@ -5,47 +5,7 @@
  */
 
 #include <assert.h>
-#include "coap.h"
-
-#ifndef DEBUG
-#define DEBUG 0
-#endif
-
-#ifndef TRACE
-#define TRACE 1
-#endif
-
-#if DEBUG
-#   include "fprintbuf.h"
-#   define DEB(args...) fprintf(stderr, args)
-#   define PRB(args...) fprintbuf(stderr, args)
-#else
-#   define DEB(args...)
-#   define PRB(args...)
-#endif
-
-#if TRACE
-#   define D(x) __FILE__":%d:%s: " x, __LINE__, __func__
-#else
-#   define D(x) x
-#endif
-
-#define CHK(N) do{\
-        size_t n = (N);\
-        DEB(D("CHK(%d bytes);\n"), n);\
-        if (bufsz < n) {\
-            DEB(D("RETURN ==> COAP_INVALID_LENGTH(have=%d, req=%d\n"),\
-                    bufsz, n);\
-            return COAP_INVALID_LENGTH;\
-        }\
-    }while(0)
-
-#define ACT(N) do{\
-        size_t n = (N);\
-        DEB(D("ACT(%d bytes);\n"), n);\
-        buff  += n;\
-        bufsz -= n;\
-    }while(0)
+#include "coapP.h"
 
 static uint32_t
 parse_unsigned(const uint8_t *buff, size_t bufsz)
@@ -62,7 +22,7 @@ parse_unsigned(const uint8_t *buff, size_t bufsz)
    
 coap_err
 coap_msg_init(
-        coap_msg *tgt)
+        coap_msg       *tgt)
 {
     static coap_msg src = {0};
     DEB(D("BEGIN\n"));
@@ -72,6 +32,67 @@ coap_msg_init(
     DEB(D("RETURN ==> COAP_OK\n"));
     return COAP_OK;
 } /* coap_msg_init */
+
+coap_err
+coap_msg_settype(
+        coap_msg       *tgt,
+        coap_typ        typ)
+{
+    DEB(D("BEGIN;\n"));
+
+    tgt->c_typ = typ;
+
+    DEB(D("RETURN COAP_OK;\n"));
+
+    return COAP_OK;
+} /* coap_msg_settype */
+
+coap_err
+coap_msg_settoken(
+        coap_msg       *tgt,
+        uint8_t        *tokdat,
+        size_t          toklen)
+{
+    DEB(D("BEGIN\n"));
+    if (toklen > COAP_TKL_MAX) {
+        DEB(D("RETURN COAP_INVALID_PARAMETER"
+                    "(toklen(%d) > %d);\n"),
+                toklen, COAP_TKL_MAX);
+        return COAP_INVALID_PARAMETER;
+    } /* if */
+
+    tgt->c_tokdat = tokdat;
+    tgt->c_toklen = toklen;
+
+    DBG(D("RETURN COAP_OK;\n"));
+
+    return COAP_OK;
+} /* coap_msg_settoken */
+
+coap_err
+coap_add_option(
+        coap_msg       *tgt,
+        coap_opt       *opt)
+{
+    coap_opt   *last;
+    uint16_t    lasttyp;
+
+    DEB(D("BEGIN\n"));
+    last = LIST_ELEMENT_LAST(&tgt->c_optslst, coap_opt, o_nod);
+    lasttyp = last ? last->o_typ : 0;
+    if (opt->o_typ < lasttyp) {
+        DEB(D("RETURN COAP_INVALID_PARAMETER(o_typ=%d);\n"),
+                opt->o_typ);
+        return COAP_INVALID_PARAMETER;
+    } /* if */
+
+    LIST_APPEND(&tgt->c_optslst, &opt->o_nod);
+    tgt->c_optssz++;
+
+    DEB(D("RETURN COAP_OK;\n"));
+    return COAP_OK;
+
+} /* coap_add_option */
 
 /* The next macro is to process the Options of a CoAP message.
  * It acts on the values taken from the OptDelta and OptLength
@@ -119,14 +140,13 @@ coap_parse(
         DEB(D("==> COAP_INVALID_VERSION\n"));
         return COAP_INVALID_VERSION;
     } /* if */
-    tgt->c_vers = COAP_VERS_VALUE;
 
     /* packet type */
     tgt->c_typ  = VALUEOF(TYPE);
 
     /* TKL */
-    if ((tgt->c_tkl = VALUEOF(TKL)) > COAP_TKL_MAX) {
-        DEB(D("==> COAP_INVALID_TKL(%d)\n"), tgt->c_tkl);
+    if ((tgt->c_toklen = VALUEOF(TKL)) > COAP_TKL_MAX) {
+        DEB(D("==> COAP_INVALID_TKL(%d)\n"), tgt->c_toklen);
         return COAP_INVALID_TKL;
     } /* if */
 
@@ -137,11 +157,11 @@ coap_parse(
     tgt->c_msgid = parse_unsigned(buff + COAP_MSGID_OFFS, COAP_MSGID_SZ);
 
     ACT(COAP_HDR_LEN);
-    CHK(tgt->c_tkl); /* check for space for the token */
+    CHK(tgt->c_toklen); /* check for space for the token */
 
     /* token */
-    tgt->c_tok = buff;
-    ACT(tgt->c_tkl);
+    tgt->c_tokdat = buff;
+    ACT(tgt->c_toklen);
 
     while(bufsz) { /* process options */
         size_t OptDLT, OptLEN;
@@ -151,8 +171,8 @@ coap_parse(
             ACT(1); /* move the pointer */
             /* it's invalid to have payload data of length 0, so... */
             CHK(1); /* check at least one byte of payload */
-            tgt->c_pld = buff;
-            tgt->c_pldsz = bufsz;
+            tgt->c_plddat = buff;
+            tgt->c_pldlen = bufsz;
             break;
         } /* if */
 
@@ -174,7 +194,7 @@ coap_parse(
         opt->o_len = OptLEN;
         opt->o_val = buff;
 
-        LIST_APPEND(&tgt->c_opts, &opt->o_nod);
+        coap_add_option(tgt, opt);
 
         ACT(OptLEN);
     } /* while */
