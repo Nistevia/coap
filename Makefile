@@ -8,7 +8,7 @@ all: $(targets)
 clean:
 	$(RM) $(targets)
 
-coap_encode_test_objs=coap_encode.o coap_encode_test.o coap_misc.o fprintbuf.o
+coap_encode_test_objs=coap_encode_test.o coap_encode.o coap_parse.o coap_misc.o fprintbuf.o
 
 coap_encode_test: $(coap_encode_test_objs)
 	$(CC) $(LDFLAGS) $(LDLIBS) -o $@ $(coap_encode_test_objs) $(coap_encode_test_libs)

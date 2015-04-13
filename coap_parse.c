@@ -120,7 +120,7 @@ coap_parse(
         opt->o_len = OptLEN;
         opt->o_val = buff;
 
-        coap_add_option(tgt, opt);
+        coap_msg_addopt(tgt, opt);
 
         ACT(OptLEN);
     } /* while */
