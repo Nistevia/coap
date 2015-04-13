@@ -1,2 +1,3 @@
 *.o
 *.out
+coap_encode_test
