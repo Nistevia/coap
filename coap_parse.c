@@ -16,7 +16,7 @@ parse_unsigned(const uint8_t *buff, size_t bufsz)
         res <<= 8;
         res |= *buff++;
     } /* while */
-    DEB(D("RETURN ==> %d(0x%04x)\n"), res, res);
+    DEB(D("RETURN ==> 0x%04x/%d\n"), res, res);
     return res;
 } /* parse_unsigned */
    

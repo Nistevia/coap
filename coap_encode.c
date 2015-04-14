@@ -24,6 +24,30 @@ code_unsigned(uint32_t val, uint8_t *buff, size_t bufsz)
     return res;
 } /* code_unsigned */
 
+/* ENCODING MACRO FOR THE nibble fields of the option
+ * processing */
+#define ENCODE(x) do{ \
+        if (x < 13) { \
+            *aux |= (x << COAP_Opt##x##_SHFT) & COAP_Opt##x##_MASK;\
+        } else { \
+            x -= 13; \
+            if (x < 256) {\
+                *aux |= (13 << COAP_Opt##x##_SHFT) & COAP_Opt##x##_MASK;\
+                CHK(1); \
+                *buff = x; \
+                ACT(1); \
+                msg->c_pktlen++;\
+            } else {\
+                x -= 256;\
+                *aux |= (14 << COAP_Opt##x##_SHFT) & COAP_Opt##x##_MASK;\
+                CHK(2);\
+                code_unsigned(x, buff, 2);\
+                ACT(2);\
+                msg->c_pktlen += 2;\
+            } /* if */\
+        } /* if */\
+    } while(0)
+
 coap_err
 coap_encode(
         coap_msg       *msg,
@@ -83,30 +107,10 @@ coap_encode(
         ACT(1);
         msg->c_pktlen++;
 
-#define ENCODE(x) do{ \
-        if (x < 13) { \
-            *aux |= (x << COAP_Opt##x##_SHFT) & COAP_Opt##x##_MASK;\
-        } else { \
-            x -= 13; \
-            if (x < 256) {\
-                *aux |= (13 << COAP_Opt##x##_SHFT) & COAP_Opt##x##_MASK;\
-                CHK(1); \
-                *buff = x; \
-                ACT(1); \
-                msg->c_pktlen++;\
-            } else {\
-                x -= 256;\
-                *aux |= (14 << COAP_Opt##x##_SHFT) & COAP_Opt##x##_MASK;\
-                CHK(2);\
-                code_unsigned(x, buff, 2);\
-                ACT(2);\
-                msg->c_pktlen += 2;\
-            } /* if */\
-        } /* if */\
-    } while(0)
-
+        /* SEE ABOVE FOR THE DEFINITION OF THESE MACROS */
         ENCODE(DLT);
         ENCODE(LEN);
+
         if (opt->o_len) {
             if (opt->o_len) CHK(opt->o_len);
             memcpy(buff, opt->o_val, opt->o_len);
