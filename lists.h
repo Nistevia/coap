@@ -24,6 +24,10 @@
 #ifndef LISTS_H
 #define LISTS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 static char LISTS_H_RCSId[] = "\n$Id: lists.h,v 1.1.1.1 2012/08/20 19:25:31 luis Exp $\n";
 
 #define LISTS_H_PACKAGE_NAME    "lists"
@@ -100,6 +104,10 @@ typedef struct LNODE_S {
             if (d->p) d->p->n = d->n;\
             if (d->n) d->n->p = d->p;\
         }while(0)
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif /* __cplusplus */
 
 #endif /* LISTS_H */
 /* Do not include anything AFTER the line above, as it would not be

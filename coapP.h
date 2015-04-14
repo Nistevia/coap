@@ -6,6 +6,10 @@
 #ifndef _COAPP_H
 #define _COAPP_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 #include "coap.h"
 
 #ifndef DEBUG
@@ -49,5 +53,9 @@
         buff  += n;\
         bufsz -= n;\
     }while(0)
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif /* __cplusplus */
 
 #endif /* _COAPP_H */

@@ -35,7 +35,7 @@ fprintbuf(
 	escritos += fprintf (f, "\n");
 	off = 0;
 	while (t > 0) {
-		escritos += fprintf (f, "%08x : ", off);
+		escritos += fprintf (f, "%08lx : ", off);
 		for (i = 0; i < TAM_REG; i++) {
 			if (t > 0)
 				escritos += fprintf (f, "%02x ", *b);
@@ -60,7 +60,7 @@ fprintbuf(
 		}
 		escritos += fprintf (f, "\n");
 	}
-	escritos += fprintf (f, "%08x\n", off);
+	escritos += fprintf (f, "%08lx\n", off);
 
 	return escritos;
 } /* fprintbuf */

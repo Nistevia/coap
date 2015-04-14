@@ -6,6 +6,10 @@
 #ifndef _COAP_H
 #define _COAP_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 #include <stdlib.h>
 #include <stdint.h>
 #include "lists.h"
@@ -150,5 +154,9 @@ coap_encode(
         coap_msg       *msg,
         uint8_t        *buff,
         size_t          bufsz);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif /* __cplusplus */
 
 #endif /* _COAP_H */

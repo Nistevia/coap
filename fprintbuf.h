@@ -24,6 +24,10 @@
 #ifndef FPRINTBUF_H
 #define FPRINTBUF_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 #include <stdio.h>
 #include <stdint.h>
 
@@ -41,9 +45,12 @@ size_t fprintbuf (
 	const char         *fmt,    /* rotulo de cabecera */
                         ...);
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif /* __cplusplus */
+
 #endif /* FPRINTBUF_H */
 /* Do not include anything AFTER the line above, as it would not be
  * protected against double inclusion from other files.
  */
-
 /* $Id: fprintbuf.h,v 2.0 2005-10-04 14:54:49 luis Exp $ */
