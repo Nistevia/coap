@@ -27,15 +27,17 @@
 
 #if TRACE
 #   define D(x) __FILE__":%d:%s: " x, __LINE__, __func__
+#   define TR(x) do{ DEB(D("%s;\n"), #x); x; } while(0);
 #else
 #   define D(x) x
+#   define TR(x) do{ x; } while(0)
 #endif
 
 #define CHK(N) do{\
         size_t n = (N);\
-        DEB(D("CHK(%d bytes);\n"), n);\
+        DEB(D("CHK(%lu bytes);\n"), n);\
         if (bufsz < n) {\
-            DEB(D("RETURN ==> COAP_INVALID_LENGTH(have=%d, req=%d\n"),\
+            DEB(D("RETURN ==> COAP_INVALID_LENGTH(have=%lu, req=%lu\n"),\
                     bufsz, n);\
             return COAP_INVALID_LENGTH;\
         }\
@@ -43,7 +45,7 @@
 
 #define ACT(N) do{\
         size_t n = (N);\
-        DEB(D("ACT(%d bytes);\n"), n);\
+        DEB(D("ACT(%lu bytes);\n"), n);\
         buff  += n;\
         bufsz -= n;\
     }while(0)

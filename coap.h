@@ -32,6 +32,9 @@
 #define COAP_CODE_MASK           0xff
 #define COAP_CODE_SHFT           0
 #define COAP_CODE_SZ             1
+#define COAP_CODE(M, m)          ((((M) & 0x7) << 5) | ((m) & 0x1f))
+#define COAP_CODE_MAJOR(c)       (((c) >> 5) & 0x07)
+#define COAP_CODE_MINOR(c)       ((c) & 0x1f)
 
 #define COAP_MSGID_OFFS          (COAP_CODE_OFFS + COAP_CODE_SZ)
 #define COAP_MSGID_SZ            2
@@ -95,6 +98,10 @@ typedef struct coap_msg_s {
 
 } coap_msg;
 
+
+char *
+coap_typ2str(
+        coap_typ        typ);
 
 coap_err
 coap_msg_init(

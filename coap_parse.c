@@ -16,7 +16,7 @@ parse_unsigned(const uint8_t *buff, size_t bufsz)
         res <<= 8;
         res |= *buff++;
     } /* while */
-    DEB(D("RETURN ==> %d\n"), res);
+    DEB(D("RETURN ==> %d(0x%04x)\n"), res, res);
     return res;
 } /* parse_unsigned */
    
@@ -32,10 +32,13 @@ parse_unsigned(const uint8_t *buff, size_t bufsz)
             /* two bytes of data */ \
             CHK(2); \
             var = 256 + 13 + parse_unsigned(buff, 2); \
+            DEB(D(#var " <== 0x%x(%d)\n"), var, var); \
             ACT(2); \
+            break; \
         case 13: /* one byte of delta */ \
             CHK(1); \
             var = 13 + parse_unsigned(buff, 1); \
+            DEB(D(#var " <== 0x%x(%d)\n"), var, var); \
             ACT(1); \
             break; \
         } /* switch */\
@@ -69,31 +72,44 @@ coap_parse(
 
     /* packet type */
     tgt->c_typ  = VALUEOF(TYPE);
+    DEB(D("TYPE = %s\n"),
+            coap_typ2str(tgt->c_typ));
 
     /* TKL */
     if ((tgt->c_toklen = VALUEOF(TKL)) > COAP_TKL_MAX) {
-        DEB(D("==> COAP_INVALID_TKL(%d)\n"), tgt->c_toklen);
+        DEB(D("==> COAP_INVALID_TKL(%lu)\n"), tgt->c_toklen);
         return COAP_INVALID_TKL;
     } /* if */
 
     /* Code */
     tgt->c_code = VALUEOF(CODE);
+    DEB(D("CODE = COAP_CODE(%d, %d)\n"),
+            COAP_CODE_MAJOR(tgt->c_code),
+            COAP_CODE_MINOR(tgt->c_code));
 
     /* Message ID */
     tgt->c_msgid = parse_unsigned(buff + COAP_MSGID_OFFS, COAP_MSGID_SZ);
+    DEB(D("MSGID = 0x%04x\n"),
+            tgt->c_msgid);
 
     ACT(COAP_HDR_LEN);
-    CHK(tgt->c_toklen); /* check for space for the token */
+    if (tgt->c_toklen) CHK(tgt->c_toklen); /* check for space for the token */
 
     /* token */
     tgt->c_tokdat = buff;
-    ACT(tgt->c_toklen);
+    PRB(tgt->c_toklen, tgt->c_tokdat,
+            D("TOKEN: %d bytes"),
+            tgt->c_toklen);
+    if (tgt->c_toklen) ACT(tgt->c_toklen);
 
     while(bufsz) { /* process options */
         size_t OptDLT, OptLEN;
         coap_opt *opt;
-        /* no need to CHK(1); as we got into the loop */
+
+        CHK(1); /* no need to CHK(1); as we got into the loop */
+
         if (buff[0] == COAP_END_OF_OPTIONS) {
+            DEB(D("END_OF_OPTIONS\n"));
             ACT(1); /* move the pointer */
             /* it's invalid to have payload data of length 0, so... */
             CHK(1); /* check at least one byte of payload */
@@ -103,16 +119,17 @@ coap_parse(
         } /* if */
 
         /* buff[0] != COAP_END_OF_OPTIONS */
-        OptDLT = VALUEOF(OptDLT);
-        OptLEN = VALUEOF(OptLEN);
+        TR(OptDLT = VALUEOF(OptDLT));
+        TR(OptLEN = VALUEOF(OptLEN));
         ACT(1); /* advance */
 
         /* see macro defined before this function */
         SWITCH(OptDLT); /* process Delta */
         SWITCH(OptLEN); /* process Length */
 
-        CHK(OptLEN);
+        if (OptLEN) CHK(OptLEN);
 
+        /* space for the option struct */
         assert(opt = malloc(sizeof(coap_opt)));
 
         opt_name += OptDLT;
@@ -120,9 +137,13 @@ coap_parse(
         opt->o_len = OptLEN;
         opt->o_val = buff;
 
+        PRB(opt->o_len, opt->o_val,
+                D("OPT %d: len=%d\n"),
+                opt->o_typ, opt->o_len);
+
         coap_msg_addopt(tgt, opt);
 
-        ACT(OptLEN);
+        if (OptLEN) ACT(OptLEN);
     } /* while */
 
     DEB(D("RETURN ==> COAP_OK\n"));

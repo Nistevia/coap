@@ -7,6 +7,17 @@
 #include <assert.h>
 #include "coapP.h"
 
+char *
+coap_typ2str(coap_typ typ)
+{
+    static char *msg[] = {
+        "CON", "NON", "ACK", "RST",
+    };
+    static char inv[] = "INVALID";
+
+    return typ >= sizeof msg/sizeof msg[0] ? inv : msg[typ];
+} /* tgt2typ */
+
 coap_err
 coap_msg_init(
         coap_msg       *tgt)
@@ -25,7 +36,7 @@ coap_msg_settype(
         coap_msg       *tgt,
         coap_typ        typ)
 {
-    DEB(D("BEGIN(typ=%d)\n"), typ);
+    DEB(D("BEGIN(typ=%s)\n"), coap_typ2str(typ));
 
     tgt->c_typ = typ;
 

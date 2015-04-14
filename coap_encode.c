@@ -61,9 +61,9 @@ coap_encode(
     msg->c_pktlen += COAP_HDR_LEN;
 
     /* TOKEN */
-    CHK(msg->c_toklen);
+    if (msg->c_toklen) CHK(msg->c_toklen);
     memcpy(buff, msg->c_tokdat, msg->c_toklen);
-    ACT(msg->c_toklen);
+    if (msg->c_toklen) ACT(msg->c_toklen);
     msg->c_pktlen += msg->c_toklen;
 
     /* Options */
@@ -108,9 +108,9 @@ coap_encode(
         ENCODE(DLT);
         ENCODE(LEN);
         if (opt->o_len) {
-            CHK(opt->o_len);
+            if (opt->o_len) CHK(opt->o_len);
             memcpy(buff, opt->o_val, opt->o_len);
-            ACT(opt->o_len);
+            if (opt->o_len) ACT(opt->o_len);
             msg->c_pktlen += opt->o_len;
         } /* if */
 
@@ -122,7 +122,7 @@ coap_encode(
         *buff = COAP_END_OF_OPTIONS;
         ACT(1);
         memcpy(buff, msg->c_plddat, msg->c_pldlen);
-        ACT(msg->c_pldlen);
+        if (msg->c_pldlen) ACT(msg->c_pldlen);
         msg->c_pktlen += 1 + msg->c_pldlen;
     } /* if */
 
