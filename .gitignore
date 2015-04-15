@@ -1,3 +1,5 @@
 *.o
+*.so
+*.so.*
 *.out
 coap_encode_test
