@@ -3,3 +3,4 @@
 *.so.*
 *.out
 coap_encode_test
+*_ut
