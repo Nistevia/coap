@@ -7,7 +7,8 @@ targets=coap_encode_test
 
 objs=$(foreach i, $(targets), $($(i)_objs))
 
-CXXFLAGS += -g3 -O0 -pthread -L gmock-1.7.0/lib/.libs -L gmock-1.7.0/gtest/lib/.libs
+CXXFLAGS += -g3 -O0 -pthread
+UTFLAGS = -lgmock_main -lgmock -lgtest
 
 .PHONY: all clean ut $(targets:=_ut)
 
@@ -35,12 +36,10 @@ coap_encode_test: $(coap_encode_test_objs)
 coap_encode_test_ut:
 
 coap_encode_ut_objs=coap_encode_ut.o coap_encode.o
-coap_encode_ut_libs=-lgmock_main -lgtest
+coap_encode_ut_libs=
 coap_encode_ut: $(coap_encode_ut_objs)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(coap_encode_ut_objs) $(coap_encode_ut_libs)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(coap_encode_ut_objs) $(coap_encode_ut_libs) $(UTFLAGS)
 	$@
-
-
 
 # DO NOT DELETE
 

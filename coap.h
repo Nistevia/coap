@@ -12,6 +12,7 @@ extern "C" {
 
 #include <stdlib.h>
 #include <stdint.h>
+#include <pthread.h>
 #include "lists.h"
 
 #define COAP_HDR_LEN             4
@@ -101,7 +102,6 @@ typedef struct coap_msg_s {
     size_t              c_optssz;  /* number of options */
 
 } coap_msg;
-
 
 char *
 coap_typ2str(
