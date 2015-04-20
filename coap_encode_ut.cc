@@ -5,10 +5,13 @@
  */
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
+
 #include "coap.h"
 
-TEST(CoapEncodeUt, CoapEncode1) {
+TEST(CoapEncode, EncodeWithEmptyMsg) {
 
+#if 1
     coap_msg msg;
     uint8_t buffer[100];
 
@@ -25,5 +28,6 @@ TEST(CoapEncodeUt, CoapEncode1) {
     msg.c_optssz = 0;
 
     EXPECT_EQ(COAP_OK, coap_encode(&msg, buffer, sizeof buffer));
+#endif
 
 } /* CoapEncodeUt/CoapEncode1 */
