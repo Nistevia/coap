@@ -7,21 +7,37 @@ targets=coap_encode_test
 
 objs=$(foreach i, $(targets), $($(i)_objs))
 
-.PHONY: all clean
+.PHONY: all clean ut $(targets:=_ut)
 
 all: $(targets)
+	@echo all: TARGETS=$(targets) OBJS=$(objs)
 clean:
-	$(RM) $(targets) ${foreach i, $(targets), $($(i)_objs)}
+	$(RM) $(targets) $(objs)
+ut:
+	$(MAKE) $(objs:.o=_ut)
 
 %.so:%.c
-	$(CC) $(CFLAGS) -fPIC -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) -fPIC -c $< -o $@
+%.so:%.cc
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -fPIC -c $< -o $@
 %.o:%.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+%.o:%.cc
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
-coap_encode_test_objs = coap_encode_test.o coap_encode.o coap_parse.o coap_misc.o fprintbuf.o
+coap_encode_test_objs=coap_encode_test.o coap_encode.o coap_parse.o coap_misc.o fprintbuf.o
+coap_encode_test_libs=
+coap_encode_test: $(coap_encode_test_objs)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(coap_encode_test_objs) $(coap_encode_test_libs)
 
-coap_encode_test: ${coap_encode_test_objs}
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ ${coap_encode_test_objs} ${coap_encode_tst_libs}
+coap_encode_test_ut:
+
+coap_encode_ut_objs=coap_encode_ut.o coap_encode.o
+coap_encode_ut_libs=-lgtest
+coap_encode_ut: $(coap_encode_ut_objs)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(coap_encode_ut_objs) $(coap_encode_ut_libs)
+
+
 
 # DO NOT DELETE
 
