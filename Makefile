@@ -10,14 +10,21 @@ objs=$(foreach i, $(targets), $($(i)_objs))
 CXXFLAGS += -g3 -O0 -pthread
 UTFLAGS = -lgmock_main -lgmock -lgtest
 
-.PHONY: all clean ut $(targets:=_ut)
+.PHONY: all clean ut-setup
 
 all: $(targets)
 	@echo all: TARGETS=$(targets) OBJS=$(objs)
 clean:
 	$(RM) $(targets) $(objs) $(objs:.o=_ut)
-ut:
+
+ut-setup:
 	$(MAKE) $(objs:.o=_ut)
+
+ut-run:
+	$(MAKE) $(objs:.o=_utrun)
+
+%_utrun:%_ut
+	$<
 
 %.so:%.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -fPIC -c $< -o $@
@@ -27,6 +34,8 @@ ut:
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 %.o:%.cc
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+%_utrun: %_ut
+	-$<
 
 coap_encode_test_objs=coap_encode_test.o coap_encode.o coap_parse.o coap_misc.o fprintbuf.o
 coap_encode_test_libs=
@@ -39,13 +48,22 @@ coap_encode_ut_objs=coap_encode_ut.o coap_encode.o fprintbuf.o
 coap_encode_ut_libs=
 coap_encode_ut: $(coap_encode_ut_objs)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(coap_encode_ut_objs) $(coap_encode_ut_libs) $(UTFLAGS)
-	$@
 
-coap_parse_ut_objs=coap_parse_ut.o coap_parse.o
+coap_parse_ut_objs=coap_parse_ut.o coap_parse.o coap_misc.o fprintbuf.o
 coap_parse_ut_libs=
 coap_parse_ut: $(coap_parse_ut_objs)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(coap_parse_ut_objs) $(coap_parse_ut_libs) $(UTFLAGS)
-	$@
+
+coap_misc_ut_objs=coap_misc_ut.o coap_misc.o fprintbuf.o
+coap_misc_ut_libs=
+coap_misc_ut: $(coap_misc_ut_objs)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(coap_misc_ut_objs) $(coap_misc_ut_libs) $(UTFLAGS)
+
+fprintbuf_ut_objs=fprintbuf_ut.o fprintbuf.o
+fprintbuf_ut_libs=
+fprintbuf_ut: $(fprintbuf_ut_objs)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(fprintbuf_ut_objs) $(fprintbuf_ut_libs) $(UTFLAGS)
+
 
 # DO NOT DELETE
 
