@@ -35,7 +35,7 @@ coap_encode_test: $(coap_encode_test_objs)
 
 coap_encode_test_ut:
 
-coap_encode_ut_objs=coap_encode_ut.o coap_encode.o
+coap_encode_ut_objs=coap_encode_ut.o coap_encode.o fprintbuf.o
 coap_encode_ut_libs=
 coap_encode_ut: $(coap_encode_ut_objs)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(coap_encode_ut_objs) $(coap_encode_ut_libs) $(UTFLAGS)
