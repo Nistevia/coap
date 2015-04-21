@@ -9,20 +9,28 @@
 
 #include "coapP.h"
 
-static size_t
-code_unsigned(uint32_t val, uint8_t *buff, size_t bufsz)
+coap_err 
+coap_encode_unsigned(uint32_t val, uint8_t *buff, size_t bufsz)
 {
     size_t res = bufsz;
-    DEB(D("BEGIN\n"));
+
+    DEB(D("BEGIN(val=%d/0x%x\n"), val, val);
+
     /* no need to CHK, as it is done outside */
     buff += bufsz;
     while(bufsz--) {
         *--buff = val & 0xff;
         val >>= 8;
     } /* while */
-    DEB(D("RETURN ==> %d\n"), res);
-    return res;
-} /* code_unsigned */
+
+    if (val) {
+        DEB(D("RETURN ==> COAP_INVALID_LENGTH\n"));
+        return COAP_INVALID_LENGTH;
+    } else {
+        DEB(D("RETURN ==> COAP_OK\n"));
+        return COAP_OK;
+    } /* if */
+} /* coap_encode_unsigned */
 
 /* ENCODING MACRO FOR THE nibble fields of the option
  * processing */
@@ -41,7 +49,7 @@ code_unsigned(uint32_t val, uint8_t *buff, size_t bufsz)
                 x -= 256;\
                 *aux |= (14 << COAP_Opt##x##_SHFT) & COAP_Opt##x##_MASK;\
                 CHK(2);\
-                code_unsigned(x, buff, 2);\
+                coap_encode_unsigned(x, buff, 2);\
                 ACT(2);\
                 msg->c_pktlen += 2;\
             } /* if */\
@@ -79,7 +87,7 @@ coap_encode(
     /* Code */
     buff[COAP_CODE_OFFS]  = msg->c_code; /* full byte */
     /* MsgId */
-    code_unsigned(msg->c_msgid, buff + COAP_MSGID_OFFS, COAP_MSGID_SZ);
+    coap_encode_unsigned(msg->c_msgid, buff + COAP_MSGID_OFFS, COAP_MSGID_SZ);
 
     ACT(COAP_HDR_LEN); /* actualize */
     msg->c_pktlen += COAP_HDR_LEN;
@@ -98,7 +106,7 @@ coap_encode(
         PRB(opt->o_len, opt->o_val,
                 D("OPTION %d, DLT=%d, LEN=%d"),
                 opt->o_typ, DLT, LEN);
-        if (DLT < 0) {
+        if (opt->o_typ < optname) {
             DEB(D("RETURN ==> COAP_INVALID_PARAMETER(Delta < 0)\n"));
             return COAP_INVALID_PARAMETER;
         } /* if */
@@ -129,6 +137,10 @@ coap_encode(
         if (msg->c_pldlen) ACT(msg->c_pldlen);
         msg->c_pktlen += 1 + msg->c_pldlen;
     } /* if */
+
+    PRB(msg->c_pktlen, msg->c_pktdat,
+            D("ENCODED PACKET CONTENTS (%d BYTES):"),
+            msg->c_pktlen);
 
     return COAP_OK;
 } /* coap_encode */

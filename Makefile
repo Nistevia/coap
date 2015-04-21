@@ -41,6 +41,12 @@ coap_encode_ut: $(coap_encode_ut_objs)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(coap_encode_ut_objs) $(coap_encode_ut_libs) $(UTFLAGS)
 	$@
 
+coap_parse_ut_objs=coap_parse_ut.o coap_parse.o
+coap_parse_ut_libs=
+coap_parse_ut: $(coap_parse_ut_objs)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(coap_parse_ut_objs) $(coap_parse_ut_libs) $(UTFLAGS)
+	$@
+
 # DO NOT DELETE
 
 coap_encode.o: /usr/include/assert.h /usr/include/features.h

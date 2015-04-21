@@ -41,7 +41,7 @@ extern "C" {
         size_t n = (N);\
         DEB(D("CHK(%lu bytes);\n"), n);\
         if (bufsz < n) {\
-            DEB(D("RETURN ==> COAP_INVALID_LENGTH(have=%lu, req=%lu\n"),\
+            DEB(D("RETURN ==> COAP_INVALID_LENGTH(have=%lu, req=%lu);\n"),\
                     bufsz, n);\
             return COAP_INVALID_LENGTH;\
         }\

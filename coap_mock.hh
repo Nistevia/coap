@@ -4,6 +4,8 @@
  * Disclaimer: (C) 2015 LUIS COLORADO.  All rights reserved.
  */
 
-#include <gtest.h>
-#include <gmock.h>
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
+#include <stdint.h>
+
 

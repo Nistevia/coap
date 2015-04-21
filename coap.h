@@ -150,6 +150,12 @@ coap_parse(
         coap_msg       *tgt);
 
 coap_err
+coap_encode_unsigned(
+        uint32_t        val,
+        uint8_t        *buff,
+        size_t          buffsz);
+
+coap_err
 coap_encode(
         coap_msg       *msg,
         uint8_t        *buff,
