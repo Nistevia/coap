@@ -8,9 +8,18 @@
 #include "coap.h"
 #include <cstdio>
 #include "fprintbuf.h"
+#include <iostream>
+
+using namespace std;
 
 uint8_t buf[] = "TEST";
 
 TEST(Misc, a) {
-    EXPECT_LT(0, fprintbuf(stdout, sizeof buf, buf, "TEST (%d bytes)", sizeof buf));
+    size_t res;
+    EXPECT_LT(20,
+            res = fprintbuf(stdout,
+                sizeof buf, buf,
+                "TEST (%d bytes)",
+                sizeof buf));
+    cout << res << " bytes output" << endl;
 }

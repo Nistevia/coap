@@ -45,7 +45,7 @@ typedef struct LNODE_S {
 
 /* definitions */
 #ifndef OFFSETOF
-#define OFFSETOF(T,f) ((int)&(((T *)0)->f))
+#define OFFSETOF(T,f) ((char *)&(((T *)0)->f) - (char *)(T *)0)
 #endif
 
 #define LIST_INIT(d) do{(d)->p=(d)->n=0;}while(0)

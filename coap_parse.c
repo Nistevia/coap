@@ -7,18 +7,22 @@
 #include <assert.h>
 #include "coapP.h"
 
-static uint32_t
-parse_unsigned(const uint8_t *buff, size_t bufsz)
+coap_err
+coap_parse_unsigned(
+        const uint8_t  *buff,
+        size_t          bufsz,
+        uint32_t       *valref)
 {
     uint32_t res = 0;
-    DEB(D("BEGIN\n"));
+    DEB(D("BEGIN(bufsz=%ld)\n"), bufsz);
     while (bufsz--) {
         res <<= 8;
         res |= *buff++;
     } /* while */
-    DEB(D("RETURN ==> 0x%04x/%d\n"), res, res);
-    return res;
-} /* parse_unsigned */
+    if (valref) *valref = res;
+    DEB(D("RETURN ==> COAP_OK (res=0x%x,%d)\n"), res, res);
+    return COAP_OK;
+} /* coap_parse_unsigned */
    
 /* The next macro is to process the Options of a CoAP message.
  * It acts on the values taken from the OptDelta and OptLength
@@ -31,13 +35,15 @@ parse_unsigned(const uint8_t *buff, size_t bufsz)
         case 14: \
             /* two bytes of data */ \
             CHK(2); \
-            var = 256 + 13 + parse_unsigned(buff, 2); \
+            coap_parse_unsigned(buff, 2, &var); \
+            var += 256 + 13; \
             DEB(D(#var " <== 0x%x(%d)\n"), var, var); \
             ACT(2); \
             break; \
         case 13: /* one byte of delta */ \
             CHK(1); \
-            var = 13 + parse_unsigned(buff, 1); \
+            coap_parse_unsigned(buff, 1, &var); \
+            var += 13; \
             DEB(D(#var " <== 0x%x(%d)\n"), var, var); \
             ACT(1); \
             break; \
@@ -63,6 +69,7 @@ coap_parse(
 
     coap_msg_init(tgt); /* initialize structure */
     tgt->c_pktdat = buff; /* pointer to packet data */
+    tgt->c_pktlen = 0;
 
     /* check the packet version */
     if (VALUEOF(VERS) != COAP_VERS_VALUE) {
@@ -88,22 +95,29 @@ coap_parse(
             COAP_CODE_MINOR(tgt->c_code));
 
     /* Message ID */
-    tgt->c_msgid = parse_unsigned(buff + COAP_MSGID_OFFS, COAP_MSGID_SZ);
+
+    coap_parse_unsigned(
+            buff + COAP_MSGID_OFFS,
+            COAP_MSGID_SZ,
+            &tgt->c_msgid);
     DEB(D("MSGID = 0x%04x\n"),
             tgt->c_msgid);
 
-    ACT(COAP_HDR_LEN);
+    ACT(COAP_HDR_LEN); tgt->c_pktlen += COAP_HDR_LEN;
     if (tgt->c_toklen) CHK(tgt->c_toklen); /* check for space for the token */
 
     /* token */
-    tgt->c_tokdat = buff;
-    PRB(tgt->c_toklen, tgt->c_tokdat,
-            D("TOKEN: %d bytes"),
-            tgt->c_toklen);
-    if (tgt->c_toklen) ACT(tgt->c_toklen);
+    if (tgt->c_toklen) {
+        tgt->c_tokdat = buff;
+        PRB(tgt->c_toklen, tgt->c_tokdat,
+                D("TOKEN: %d bytes"),
+                tgt->c_toklen);
+        ACT(tgt->c_toklen); 
+        tgt->c_pktlen += tgt->c_toklen;
+    } /* if */
 
     while(bufsz) { /* process options */
-        size_t OptDLT, OptLEN;
+        uint32_t OptDLT, OptLEN;
         coap_opt *opt;
 
         CHK(1); /* no need to CHK(1); as we got into the loop */
@@ -111,6 +125,7 @@ coap_parse(
         if (buff[0] == COAP_END_OF_OPTIONS) {
             DEB(D("END_OF_OPTIONS\n"));
             ACT(1); /* move the pointer */
+            tgt->c_pktlen++;
             /* it's invalid to have payload data of length 0, so... */
             CHK(1); /* check at least one byte of payload */
             tgt->c_plddat = buff;
@@ -122,6 +137,7 @@ coap_parse(
         TR(OptDLT = VALUEOF(OptDLT));
         TR(OptLEN = VALUEOF(OptLEN));
         ACT(1); /* advance */
+        tgt->c_pktlen++;
 
         /* see macro defined before this function */
         SWITCH(OptDLT); /* process Delta */
@@ -143,7 +159,10 @@ coap_parse(
 
         coap_msg_addopt(tgt, opt);
 
-        if (OptLEN) ACT(OptLEN);
+        if (OptLEN) {
+            ACT(OptLEN);
+            tgt->c_pktlen += OptLEN;
+        } /* if */
     } /* while */
 
     DEB(D("RETURN ==> COAP_OK\n"));

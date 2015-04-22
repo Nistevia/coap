@@ -15,7 +15,7 @@ UTFLAGS = -lgmock_main -lgmock -lgtest
 all: $(targets)
 	@echo all: TARGETS=$(targets) OBJS=$(objs)
 clean:
-	$(RM) $(targets) $(objs) $(objs:.o=_ut)
+	$(RM) $(targets) $(objs) $(objs:.o=_ut) $(foreach i, $(objs:.o=_ut), $($(i)_objs))
 
 ut-setup:
 	$(MAKE) $(objs:.o=_ut)
@@ -35,7 +35,7 @@ ut-run:
 %.o:%.cc
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 %_utrun: %_ut
-	-$<
+	-$< $(UTRUNFLAGS)
 
 coap_encode_test_objs=coap_encode_test.o coap_encode.o coap_parse.o coap_misc.o fprintbuf.o
 coap_encode_test_libs=

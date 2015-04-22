@@ -62,7 +62,7 @@ coap_msg_setcode(
 coap_err
 coap_msg_setpayload(
         coap_msg       *tgt,
-        uint8_t        *payload,
+        const uint8_t  *payload,
         size_t          payloadlen)
 {
     DEB(D("BEGIN(payloadlen=%d,payload=...)\n"), payloadlen);
@@ -78,10 +78,11 @@ coap_msg_setpayload(
 coap_err
 coap_msg_settoken(
         coap_msg       *tgt,
-        uint8_t        *tokdat,
+        const uint8_t  *tokdat,
         size_t          toklen)
 {
     DEB(D("BEGIN(toklen=%d,tokdat=...)\n"), toklen);
+
     if (toklen > COAP_TKL_MAX) {
         DEB(D("RETURN COAP_INVALID_PARAMETER"
                     "(toklen(%d) > %d);\n"),
@@ -135,3 +136,31 @@ coap_msg_addopt(
     return COAP_OK;
 
 } /* coap_msg_addopt */
+
+coap_opt
+*coap_msg_fstopt(
+        coap_msg       *tgt)
+{
+    return LIST_ELEMENT_FIRST(&tgt->c_optslst, coap_opt, o_nod);
+}
+
+coap_opt
+*coap_msg_lstopt(
+        coap_msg       *tgt)
+{
+    return LIST_ELEMENT_LAST(&tgt->c_optslst, coap_opt, o_nod);
+}
+
+coap_opt
+*coap_msg_nxtopt(
+        coap_opt       *opt)
+{
+    return LIST_ELEMENT_NEXT(opt, coap_opt, o_nod);
+}
+
+coap_opt
+*coap_msg_prvopt(
+        coap_opt       *opt)
+{
+    return LIST_ELEMENT_PREV(opt, coap_opt, o_nod);
+}

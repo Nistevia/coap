@@ -54,7 +54,7 @@ struct CoapEncode: ::testing::Test {
 
 }; /* CoapEncode */
 
-TEST_F(CoapEncode, EncodeWithEmptyCONMsg)
+TEST_F(CoapEncode, encodeWithEmptyCONMsg)
 {
     EXPECT_EQ(COAP_OK,
             coap_encode(&msg,
@@ -74,7 +74,7 @@ TEST_F(CoapEncode, EncodeWithEmptyCONMsg)
     EXPECT_EQ(0xA5, *p++);
 }
 
-TEST_F(CoapEncode, EncodeWithEmptyNONMsg)
+TEST_F(CoapEncode, encodeWithEmptyNONMsg)
 {
     msg.c_typ = coap_typ_NON;
 
@@ -96,7 +96,7 @@ TEST_F(CoapEncode, EncodeWithEmptyNONMsg)
     EXPECT_EQ(0xA5, *p++);
 }
 
-TEST_F(CoapEncode, EncodeWithEmptyACKMsg)
+TEST_F(CoapEncode, encodeWithEmptyACKMsg)
 {
     msg.c_typ = coap_typ_ACK;
 
@@ -118,7 +118,7 @@ TEST_F(CoapEncode, EncodeWithEmptyACKMsg)
     EXPECT_EQ(0xA5, *p++);
 }
 
-TEST_F(CoapEncode, EncodeWithEmptyRSTMsg)
+TEST_F(CoapEncode, encodeWithEmptyRSTMsg)
 {
     msg.c_typ = coap_typ_RST;
 
@@ -140,7 +140,7 @@ TEST_F(CoapEncode, EncodeWithEmptyRSTMsg)
     EXPECT_EQ(0xA5, *p++);
 }
 
-TEST_F(CoapEncode, EncodeWithMsgId)
+TEST_F(CoapEncode, encodeWithMsgId)
 {
     msg.c_msgid = 0x1234;
 
@@ -162,10 +162,10 @@ TEST_F(CoapEncode, EncodeWithMsgId)
     EXPECT_EQ(0xA5, *p++);
 }
 
-TEST_F(CoapEncode, EncodeWithCode)
+TEST_F(CoapEncode, encodeWithCodeGET)
 {
     msg.c_typ = coap_typ_CON;
-    msg.c_code = COAP_CODE(0, 1);
+    msg.c_code = COAP_METHD_GET;
 
     EXPECT_EQ(COAP_OK,
             coap_encode(&msg,
@@ -177,7 +177,7 @@ TEST_F(CoapEncode, EncodeWithCode)
     EXPECT_EQ(4, msg.c_pktlen);
 
     EXPECT_EQ(0x40, *p++);
-    EXPECT_EQ(0x01, *p++);
+    EXPECT_EQ(COAP_METHD_GET, *p++);
     EXPECT_EQ(0x00, *p++);
     EXPECT_EQ(0x00, *p++);
 
@@ -185,13 +185,13 @@ TEST_F(CoapEncode, EncodeWithCode)
     EXPECT_EQ(0xA5, *p++);
 }
 
-TEST_F(CoapEncode, EncodeWithCodeAndInvalidToken)
+TEST_F(CoapEncode, encodeWithCodeGETAndInvalidToken)
 {
     /* token too long */
     const uint8_t tok[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 
     msg.c_typ = coap_typ_CON;
-    msg.c_code = COAP_CODE(0, 1);
+    msg.c_code = COAP_METHD_GET;
     msg.c_toklen = sizeof tok;
     msg.c_tokdat = tok;
 
@@ -201,10 +201,10 @@ TEST_F(CoapEncode, EncodeWithCodeAndInvalidToken)
                 sizeof buffer));
 }
 
-TEST_F(CoapEncode, EncodeWithCodeAndValidToken)
+TEST_F(CoapEncode, encodeWithCodeGETAndValidToken)
 {
     msg.c_typ = coap_typ_CON;
-    msg.c_code = COAP_CODE(0, 1);
+    msg.c_code = COAP_METHD_GET;
     msg.c_tokdat = (const uint8_t *)token;
     msg.c_toklen = sizeof token;
 
@@ -217,7 +217,7 @@ TEST_F(CoapEncode, EncodeWithCodeAndValidToken)
     EXPECT_EQ(4 + sizeof token, msg.c_pktlen);
 
     EXPECT_EQ(0x46, *p++);
-    EXPECT_EQ(0x01, *p++);
+    EXPECT_EQ(COAP_METHD_GET, *p++);
     EXPECT_EQ(0x00, *p++);
     EXPECT_EQ(0x00, *p++);
 
@@ -229,10 +229,10 @@ TEST_F(CoapEncode, EncodeWithCodeAndValidToken)
     EXPECT_EQ(0xA5, *p++);
 }
 
-TEST_F(CoapEncode, EncodeWithCodeAndPayload)
+TEST_F(CoapEncode, encodeWithCodePUTAndPayload)
 {
     msg.c_typ = coap_typ_CON;
-    msg.c_code = COAP_CODE(0, 2);
+    msg.c_code = COAP_METHD_PUT;
     msg.c_pldlen = sizeof thePayload;
     msg.c_plddat = (const uint8_t *)thePayload;
 
@@ -250,7 +250,7 @@ TEST_F(CoapEncode, EncodeWithCodeAndPayload)
             msg.c_pktlen);
 
     EXPECT_EQ(0x40, *p++);
-    EXPECT_EQ(0x02, *p++);
+    EXPECT_EQ(COAP_METHD_PUT, *p++);
     EXPECT_EQ(0x00, *p++);
     EXPECT_EQ(0x00, *p++);
 
@@ -266,10 +266,10 @@ TEST_F(CoapEncode, EncodeWithCodeAndPayload)
     EXPECT_EQ(0xA5, *p++);
 }
 
-TEST_F(CoapEncode, EncodeWithCodeAndZeroLengthPayload)
+TEST_F(CoapEncode, encodeWithCodePUTAndZeroLengthPayload)
 {
     msg.c_typ = coap_typ_CON;
-    msg.c_code = COAP_CODE(0, 2);
+    msg.c_code = COAP_METHD_PUT;
     msg.c_pldlen = 0;
     msg.c_plddat = (const uint8_t *)thePayload;
 
@@ -285,7 +285,7 @@ TEST_F(CoapEncode, EncodeWithCodeAndZeroLengthPayload)
             msg.c_pktlen);
 
     EXPECT_EQ(0x40, *p++);
-    EXPECT_EQ(0x02, *p++);
+    EXPECT_EQ(COAP_METHD_PUT, *p++);
     EXPECT_EQ(0x00, *p++);
     EXPECT_EQ(0x00, *p++);
 
@@ -293,10 +293,10 @@ TEST_F(CoapEncode, EncodeWithCodeAndZeroLengthPayload)
     EXPECT_EQ(0xA5, *p++);
 }
 
-TEST_F(CoapEncode, EncodeWithCodeAndLength1Payload)
+TEST_F(CoapEncode, encodeWithCodePUTAndLength1Payload)
 {
     msg.c_typ = coap_typ_CON;
-    msg.c_code = COAP_CODE(0, 2);
+    msg.c_code = COAP_METHD_PUT;
     const size_t PAYLOAD_SIZE = 1;
     msg.c_pldlen = PAYLOAD_SIZE;
     msg.c_plddat = (const uint8_t *)thePayload;
@@ -315,7 +315,7 @@ TEST_F(CoapEncode, EncodeWithCodeAndLength1Payload)
             msg.c_pktlen);
 
     EXPECT_EQ(0x40, *p++);
-    EXPECT_EQ(0x02, *p++);
+    EXPECT_EQ(COAP_METHD_PUT, *p++);
     EXPECT_EQ(0x00, *p++);
     EXPECT_EQ(0x00, *p++);
 
@@ -329,12 +329,12 @@ TEST_F(CoapEncode, EncodeWithCodeAndLength1Payload)
     EXPECT_EQ(0xA5, *p++);
 }
 
-TEST_F(CoapEncode, EncodeWithCodeShortOptionAndPayload)
+TEST_F(CoapEncode, encodeWithCodePUTShortOptionAndPayload)
 {
     coap_opt opt;
 
     msg.c_typ = coap_typ_CON;
-    msg.c_code = COAP_CODE(0, 2);
+    msg.c_code = COAP_METHD_PUT;
     msg.c_pldlen = sizeof thePayload;
     msg.c_plddat = (const uint8_t *)thePayload;
     opt.o_typ = 3;
@@ -359,7 +359,7 @@ TEST_F(CoapEncode, EncodeWithCodeShortOptionAndPayload)
             msg.c_pktlen);
 
     EXPECT_EQ(0x40, *p++);
-    EXPECT_EQ(0x02, *p++);
+    EXPECT_EQ(COAP_METHD_PUT, *p++);
     EXPECT_EQ(0x00, *p++);
     EXPECT_EQ(0x00, *p++);
 
@@ -379,12 +379,12 @@ TEST_F(CoapEncode, EncodeWithCodeShortOptionAndPayload)
     EXPECT_EQ(0xA5, *p++);
 }
 
-TEST_F(CoapEncode, EncodeWithCodeShortOptionMediumOptionAndPayload)
+TEST_F(CoapEncode, encodeWithCodePUTShortOptionMediumOptionAndPayload)
 {
     coap_opt opt1, opt2;
 
     msg.c_typ = coap_typ_CON;
-    msg.c_code = COAP_CODE(0, 2);
+    msg.c_code = COAP_METHD_PUT;
     msg.c_pldlen = sizeof thePayload;
     msg.c_plddat = (const uint8_t *)thePayload;
     opt1.o_typ = 3;
@@ -413,7 +413,7 @@ TEST_F(CoapEncode, EncodeWithCodeShortOptionMediumOptionAndPayload)
     p = msg.c_pktdat;
 
     EXPECT_EQ(0x40, *p++);
-    EXPECT_EQ(0x02, *p++);
+    EXPECT_EQ(COAP_METHD_PUT, *p++);
     EXPECT_EQ(0x00, *p++);
     EXPECT_EQ(0x00, *p++);
 
@@ -439,13 +439,13 @@ TEST_F(CoapEncode, EncodeWithCodeShortOptionMediumOptionAndPayload)
     EXPECT_EQ(0xA5, *p++);
 }
 
-TEST_F(CoapEncode, EncodeWithCodeShortOptionMediumOptionLongOptionAndPayload)
+TEST_F(CoapEncode, encodeWithCodePUTShortOptionMediumOptionLongOptionAndPayload)
 {
     coap_opt opt1, opt2, opt3;
     const uint16_t LONG_TAG = 3000;
 
     msg.c_typ = coap_typ_CON;
-    msg.c_code = COAP_CODE(0, 2);
+    msg.c_code = COAP_METHD_PUT;
     msg.c_pldlen = sizeof thePayload;
     msg.c_plddat = (const uint8_t *)thePayload;
     opt1.o_typ = 3;
@@ -482,7 +482,7 @@ TEST_F(CoapEncode, EncodeWithCodeShortOptionMediumOptionLongOptionAndPayload)
     p = msg.c_pktdat;
 
     EXPECT_EQ(0x40, *p++);
-    EXPECT_EQ(0x02, *p++);
+    EXPECT_EQ(COAP_METHD_PUT, *p++);
     EXPECT_EQ(0x00, *p++);
     EXPECT_EQ(0x00, *p++);
 
@@ -518,13 +518,13 @@ TEST_F(CoapEncode, EncodeWithCodeShortOptionMediumOptionLongOptionAndPayload)
     EXPECT_EQ(0xA5, *p++);
 }
 
-TEST_F(CoapEncode, EncodeWithShortBuffer)
+TEST_F(CoapEncode, encodeWithShortBuffer)
 {
     coap_opt opt1, opt2, opt3;
     const uint16_t LONG_TAG = 3000;
 
     msg.c_typ = coap_typ_CON;
-    msg.c_code = COAP_CODE(0, 2);
+    msg.c_code = COAP_METHD_PUT;
     msg.c_pldlen = sizeof thePayload;
     msg.c_plddat = (const uint8_t *)thePayload;
     opt1.o_typ = 3;
@@ -544,6 +544,7 @@ TEST_F(CoapEncode, EncodeWithShortBuffer)
             coap_encode(&msg,
                 buffer,
                 sizeof buffer));
+    EXPECT_GT(sizeof buffer, msg.c_pktlen);
 }
 
 TEST_F(CoapEncode, EncodeWithInvalidOption)
@@ -552,7 +553,7 @@ TEST_F(CoapEncode, EncodeWithInvalidOption)
     const uint16_t LONG_TAG = 3000;
 
     msg.c_typ = coap_typ_CON;
-    msg.c_code = COAP_CODE(0, 2);
+    msg.c_code = COAP_METHD_PUT;
     msg.c_pldlen = sizeof thePayload;
     msg.c_plddat = (const uint8_t *)thePayload;
     opt1.o_typ = 3;
@@ -568,10 +569,11 @@ TEST_F(CoapEncode, EncodeWithInvalidOption)
             coap_encode(&msg,
                 longBuffer,
                 sizeof longBuffer));
+    EXPECT_GT(sizeof longBuffer, msg.c_pktlen);
 }
 
 struct CoapEncodeUnsigned: ::testing::Test {
-    uint8_t buffer[10];
+    uint8_t buffer[6];
     uint8_t *p;
     CoapEncodeUnsigned() {
         memset(buffer, 0xA5, sizeof buffer);
@@ -579,20 +581,20 @@ struct CoapEncodeUnsigned: ::testing::Test {
     } /* CoapEncodeUnsigned() */
 }; /* CoapEncodeUnsigned */
 
-TEST_F(CoapEncodeUnsigned, EncodeWithBuffer6Enough)
+TEST_F(CoapEncodeUnsigned, encodeWithBuffer6Enough)
 {
     EXPECT_EQ(COAP_OK,
-            coap_encode_unsigned(0x76543210, buffer, 6));
+            coap_encode_unsigned(0x76543210,
+                buffer, sizeof buffer));
     EXPECT_EQ(0, *p++);
     EXPECT_EQ(0, *p++);
     EXPECT_EQ(0x76, *p++);
     EXPECT_EQ(0x54, *p++);
     EXPECT_EQ(0x32, *p++);
     EXPECT_EQ(0x10, *p++);
-    EXPECT_EQ(0xA5, *p++);
 }
 
-TEST_F(CoapEncodeUnsigned, EncodeWithBuffer4Enough)
+TEST_F(CoapEncodeUnsigned, encodeWithBuffer4Enough)
 {
     EXPECT_EQ(COAP_OK,
             coap_encode_unsigned(0x76543210, buffer, 4));
@@ -601,15 +603,41 @@ TEST_F(CoapEncodeUnsigned, EncodeWithBuffer4Enough)
     EXPECT_EQ(0x32, *p++);
     EXPECT_EQ(0x10, *p++);
     EXPECT_EQ(0xA5, *p++);
-}
-
-TEST_F(CoapEncodeUnsigned, EncodeWithBuffer3Fail)
-{
-    EXPECT_EQ(COAP_INVALID_LENGTH,
-            coap_encode_unsigned(0x76543210, buffer, 3));
-    EXPECT_NE(0xA5,*p++);
-    EXPECT_NE(0xA5,*p++);
-    EXPECT_NE(0xA5,*p++);
     EXPECT_EQ(0xA5, *p++);
 }
 
+TEST_F(CoapEncodeUnsigned, encodeWithBuffer3Fail)
+{
+    EXPECT_EQ(COAP_INVALID_LENGTH,
+            coap_encode_unsigned(0x76543210, buffer, 3));
+    EXPECT_NE(0xA5, *p++);
+    EXPECT_NE(0xA5, *p++);
+    EXPECT_NE(0xA5, *p++);
+    EXPECT_EQ(0xA5, *p++);
+    EXPECT_EQ(0xA5, *p++);
+    EXPECT_EQ(0xA5, *p++);
+}
+
+TEST_F(CoapEncodeUnsigned, encodeWithBuffer0Success)
+{
+    EXPECT_EQ(COAP_OK,
+            coap_encode_unsigned(0, 0, 0));
+    EXPECT_EQ(0xA5, *p++);
+    EXPECT_EQ(0xA5, *p++);
+    EXPECT_EQ(0xA5, *p++);
+    EXPECT_EQ(0xA5, *p++);
+    EXPECT_EQ(0xA5, *p++);
+    EXPECT_EQ(0xA5, *p++);
+}
+
+TEST_F(CoapEncodeUnsigned, encodeWithBuffer0Fail)
+{
+    EXPECT_EQ(COAP_INVALID_LENGTH,
+            coap_encode_unsigned(1, 0, 0));
+    EXPECT_EQ(0xA5, *p++);
+    EXPECT_EQ(0xA5, *p++);
+    EXPECT_EQ(0xA5, *p++);
+    EXPECT_EQ(0xA5, *p++);
+    EXPECT_EQ(0xA5, *p++);
+    EXPECT_EQ(0xA5, *p++);
+}

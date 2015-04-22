@@ -41,6 +41,41 @@ extern "C" {
 #define COAP_CODE_MAJOR(c)       (((c) >> 5) & 0x07)
 #define COAP_CODE_MINOR(c)       ((c) & 0x1f)
 
+#define COAP_METHD               (0)
+#define COAP_RSPOK               (2)
+#define COAP_CLERR               (4)
+#define COAP_SVERR               (5)
+
+#define COAP_METHD_EMPTY                 (COAP_CODE(COAP_METHD, 0))
+#define COAP_METHD_GET                   (COAP_CODE(COAP_METHD, 1))
+#define COAP_METHD_POST                  (COAP_CODE(COAP_METHD, 2))
+#define COAP_METHD_PUT                   (COAP_CODE(COAP_METHD, 3))
+#define COAP_METHD_DELETE                (COAP_CODE(COAP_METHD, 4))
+
+#define COAP_RSPOK_CREATED               (COAP_CODE(COAP_RSPOK, 1))
+#define COAP_RSPOK_DELETED               (COAP_CODE(COAP_RSPOK, 2))
+#define COAP_RSPOK_VALID                 (COAP_CODE(COAP_RSPOK, 3))
+#define COAP_RSPOK_CHANGED               (COAP_CODE(COAP_RSPOK, 4))
+#define COAP_RSPOK_CONTENT               (COAP_CODE(COAP_RSPOK, 5))
+
+#define COAP_CLERR_BAD_REQUEST           (COAP_CODE(COAP_CLERR, 0))
+#define COAP_CLERR_UAUTHORIZED           (COAP_CODE(COAP_CLERR, 1))
+#define COAP_CLERR_BAD_OPTION            (COAP_CODE(COAP_CLERR, 2))
+#define COAP_CLERR_FORBIDDEN             (COAP_CODE(COAP_CLERR, 3))
+#define COAP_CLERR_NOT_FOUND             (COAP_CODE(COAP_CLERR, 4))
+#define COAP_CLERR_METHOD_NOT_ALLOWED    (COAP_CODE(COAP_CLERR, 5))
+#define COAP_CLERR_NOT_ACCEPTABLE        (COAP_CODE(COAP_CLERR, 6))
+#define COAP_CLERR_PRECONDITION_FAILED   (COAP_CODE(COAP_CLERR,12))
+#define COAP_CLERR_REQ_ENTITY_TOO_LARGE  (COAP_CODE(COAP_CLERR,13))
+#define COAP_CLERR_UNSUPP_CONTENT_FORMAT (COAP_CODE(COAP_CLERR,15))
+
+#define COAP_SVERR_INTERNAL_SERVER_ERROR (COAP_CODE(5, 0))
+#define COAP_SVERR_NOT_IMPLEMENTED       (COAP_CODE(5, 1))
+#define COAP_SVERR_BAD_GATEWAY           (COAP_CODE(5, 2))
+#define COAP_SVERR_SERVICE_UAVAIL        (COAP_CODE(5, 3))
+#define COAP_SVERR_GW_TIMEOUT            (COAP_CODE(5, 4))
+#define COAP_SVERR_PROXY_NOT_SUPP        (COAP_CODE(5, 5))
+
 #define COAP_MSGID_OFFS          (COAP_CODE_OFFS + COAP_CODE_SZ)
 #define COAP_MSGID_SZ            2
 
@@ -60,8 +95,7 @@ typedef enum coap_err_e {
     COAP_INVALID_VERSION,   /* invalid version on parsing */
     COAP_INVALID_TKL,       /* invalid token length */
     COAP_INVALID_FORMAT,    /* invalid format */
-    COAP_INVALID_OptDLT,    /* invalid OptionDelta in parsing */
-    COAP_INVALID_OptLEN,    /* invalid OptionLength in parsing */
+    COAP_INVALID_OptDLT,    /* invalid OptionDelta in parsing */ COAP_INVALID_OptLEN,    /* invalid OptionLength in parsing */
     COAP_INVALID_PARAMETER, /* invalid PARAMETER on packet construction */
     /* insert error codes before this line */
     COAP_ERR_NBR /* must be the last one */
@@ -124,13 +158,13 @@ coap_msg_setcode(
 coap_err
 coap_msg_setpayload(
         coap_msg       *tgt,
-        uint8_t        *payload,
+        const uint8_t  *payload,
         size_t          payloadlen);
 
 coap_err
 coap_msg_settoken(
         coap_msg       *tgt,
-        uint8_t        *tokdat,
+        const uint8_t  *tokdat,
         size_t          toklen);
 
 coap_err
@@ -141,6 +175,22 @@ coap_msg_setmsgid(
 coap_err
 coap_msg_addopt(
         coap_msg       *tgt,
+        coap_opt       *opt);
+
+coap_opt
+*coap_msg_fstopt(
+        coap_msg       *tgt);
+
+coap_opt
+*coap_msg_lstopt(
+        coap_msg       *tgt);
+
+coap_opt
+*coap_msg_nxtopt(
+        coap_opt       *opt);
+
+coap_opt
+*coap_msg_prvopt(
         coap_opt       *opt);
 
 coap_err
@@ -160,6 +210,12 @@ coap_encode(
         coap_msg       *msg,
         uint8_t        *buff,
         size_t          bufsz);
+
+coap_err
+coap_parse_unsigned(
+        const uint8_t  *buff,
+        size_t          buffsz,
+        uint32_t       *valref);
 
 #ifdef __cplusplus
 } /* extern "C" */

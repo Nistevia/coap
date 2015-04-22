@@ -28,7 +28,7 @@ fprintbuf(
 	size_t escritos = 0;
 
 	if (fmt)
-		escritos += fprintf (f, "DESPLAZ. : ");
+		escritos += fprintf (f, "<OFFSET> : ");
 	va_start (lista, fmt);
 	escritos += vfprintf (f, fmt, lista);
 	va_end (lista);

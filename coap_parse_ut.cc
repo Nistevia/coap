@@ -9,6 +9,50 @@
 
 #include "coap.h"
 
+TEST(CoapParseUnsigned, Size4)
+{
+    uint8_t buffer[] = {0x01, 0x23, 0x45, 0x67, };
+    uint32_t val;
+
+    EXPECT_EQ(COAP_OK, coap_parse_unsigned(buffer, sizeof buffer, &val));
+    EXPECT_EQ(0x01234567, val);
+}
+
+TEST(CoapParseUnsigned, Size3)
+{
+    uint8_t buffer[] = {0x01, 0x23, 0x45, };
+    uint32_t val;
+
+    EXPECT_EQ(COAP_OK, coap_parse_unsigned(buffer, sizeof buffer, &val));
+    EXPECT_EQ(0x012345, val);
+}
+
+TEST(CoapParseUnsigned, Size2)
+{
+    uint8_t buffer[] = {0x01, 0x23, };
+    uint32_t val;
+
+    EXPECT_EQ(COAP_OK, coap_parse_unsigned(buffer, sizeof buffer, &val));
+    EXPECT_EQ(0x0123, val);
+}
+
+TEST(CoapParseUnsigned, Size1)
+{
+    uint8_t buffer[] = {0x01 };
+    uint32_t val;
+
+    EXPECT_EQ(COAP_OK, coap_parse_unsigned(buffer, sizeof buffer, &val));
+    EXPECT_EQ(0x01, val);
+}
+
+TEST(CoapParseUnsigned, Size0)
+{
+    uint32_t val = 0xA5A5A5A5;
+
+    EXPECT_EQ(COAP_OK, coap_parse_unsigned(0, 0, &val));
+    EXPECT_EQ(0x0, val);
+}
+
 struct CoapParse: ::testing::Test {
     coap_msg        msg;
 };
@@ -21,6 +65,18 @@ TEST_F(CoapParse, EmptyCONPacket) {
     }; /* packet */
 
     EXPECT_EQ(COAP_OK, coap_parse(packet, sizeof packet, &msg));
+    EXPECT_EQ(packet, msg.c_pktdat);
+    EXPECT_EQ(sizeof packet, msg.c_pktlen);
+    EXPECT_EQ(coap_typ_CON, msg.c_typ);
+    EXPECT_EQ(0, msg.c_tokdat);
+    EXPECT_EQ(0, msg.c_toklen);
+    EXPECT_EQ(COAP_CODE(0,0), msg.c_code);
+    EXPECT_EQ(0, msg.c_msgid);
+    EXPECT_EQ(0, msg.c_plddat);
+    EXPECT_EQ(0, msg.c_pldlen);
+    EXPECT_EQ(0, LIST_ELEMENT_FIRST(&msg.c_optslst, coap_opt, o_nod));
+    EXPECT_EQ(0, LIST_ELEMENT_LAST(&msg.c_optslst, coap_opt, o_nod));
+    EXPECT_EQ(0, msg.c_optssz);
 }
 
 TEST_F(CoapParse, EmptyNONPacket) {
