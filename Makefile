@@ -3,19 +3,25 @@
 # Date: Fri Apr 10 21:16:48 EEST 2015
 # Disclaimer: (C) 2015 LUIS COLORADO.  All rights reserved.
 
-targets=coap_encode_test coap_ut
+coaplib_MAJOR=1
+coaplib_MINOR=0.1
+
+coaplib=libcoap.so
+coapsoname=$(coaplib).$(coaplib_MAJOR)
+coaplib_full=$(coapsoname).$(coaplib_MINOR)
+
+targets= ut $(coaplib_full)
 
 objs=$(foreach i, $(targets), $($(i)_objs))
 
 CXXFLAGS += -g3 -O0 -pthread
 UTFLAGS += -lgmock_main -lgmock -lgtest
 
-.PHONY: all clean ut-setup ut-run
+.PHONY: all clean ut
 
 all: $(targets)
-	@echo all: TARGETS=$(targets) OBJS=$(objs)
 clean:
-	$(RM) $(targets) $(objs) $(objs:.o=_ut) $(foreach i, $(objs:.o=_ut), $($(i)_objs))
+	$(RM) $(targets) $(objs)
 
 %.so:%.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -fPIC -c $< -o $@
@@ -26,15 +32,15 @@ clean:
 %.o:%.cc
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
-coap_encode_test_objs=coap_encode_test.o coap_encode.o coap_parse.o coap_misc.o fprintbuf.o
-coap_encode_test_libs=
-coap_encode_test: $(coap_encode_test_objs)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(coap_encode_test_objs) $(coap_encode_test_libs)
+$(coaplib_full)_objs=coap_encode.so coap_parse.so coap_misc.so fprintbuf.so
+$(coaplib_full):$($(coaplib_full)_objs)
+	$(CC) $(LDFLAGS) -o $@ -shared -Wl,-soname=$(coapsoname) $($(coaplib_full)_objs)
 
-coap_ut_objs=coap_ut.o coap_encode.o coap_parse.o coap_misc.o fprintbuf.o
-coap_ut_libs=
-coap_ut: $(coap_ut_objs)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(coap_ut_objs) $(coap_ut_libs) $(UTFLAGS)
+#coap_ut_objs=coap_ut.o coap_encode.o coap_parse.o coap_misc.o fprintbuf.o
+ut_objs=coap_ut.o $(coaplib_full)
+ut_libs=
+ut: $(ut_objs)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(ut_objs) $(ut_libs) $(UTFLAGS)
 
 # DO NOT DELETE
 
