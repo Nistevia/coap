@@ -10,16 +10,41 @@
 #include "fprintbuf.h"
 #include <iostream>
 
-using namespace std;
-
-uint8_t buf[] = "TEST";
-
-TEST(Misc, a) {
+TEST(Misc, zeroLengthBuffer) {
     size_t res;
-    EXPECT_LT(20,
+
+    EXPECT_LT(0,
+            res = fprintbuf(stdout,
+                0, 0,
+                "TEST (%d bytes)",
+                0));
+    std::cout << res << " bytes output" << std::endl;
+}
+
+TEST(Misc, lessThanARowBuffer) {
+    size_t res;
+    uint8_t buf[] = "TEST";
+
+    EXPECT_LT(0,
             res = fprintbuf(stdout,
                 sizeof buf, buf,
                 "TEST (%d bytes)",
                 sizeof buf));
-    cout << res << " bytes output" << endl;
+    std::cout << res << " bytes output" << std::endl;
+}
+
+TEST(Misc, moreThanARowBuffer) {
+    size_t res;
+    uint8_t buf[] =
+        "This is a long TEST BUFFER to show "
+        "how it splits output in several "
+        "lines";
+
+
+    EXPECT_LT(0,
+            res = fprintbuf(stdout,
+                sizeof buf, buf,
+                "TEST (%d bytes)",
+                sizeof buf));
+    std::cout << res << " bytes output" << std::endl;
 }
