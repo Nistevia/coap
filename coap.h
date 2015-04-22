@@ -13,6 +13,9 @@ extern "C" {
 #include <stdlib.h>
 #include <stdint.h>
 #include <pthread.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+
 #include "lists.h"
 
 #define COAP_HDR_LEN             4
@@ -136,6 +139,17 @@ typedef struct coap_msg_s {
     size_t              c_optssz;  /* number of options */
 
 } coap_msg;
+
+typedef struct coap_sap_s {
+    int                 sap_sd;     /* socket descriptor */
+    struct sockaddr_in *sap_bound;
+    pthread_t           sap_thread; /* thread associated to this sap */
+} coap_sap;
+
+coap_err
+new_coap_sap(
+        struct sockaddr_in *bind,   /* local socket to bind */
+        coap_sap *sap);             /* coap_sap to init with data */
 
 char *
 coap_typ2str(

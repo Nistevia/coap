@@ -6,22 +6,29 @@
 coaplib_MAJOR=1
 coaplib_MINOR=0.1
 
-coaplib=libcoap.so
-coapsoname=$(coaplib).$(coaplib_MAJOR)
-coaplib_full=$(coapsoname).$(coaplib_MINOR)
+targets= $(coaplib_fullname) ut
 
-targets= ut $(coaplib_full)
+coaplib=libcoap.so
+coaplib_soname=$(coaplib).$(coaplib_MAJOR)
+coaplib_fullname=$(coaplib_soname).$(coaplib_MINOR)
+
+prefix=/usr
+
 
 objs=$(foreach i, $(targets), $($(i)_objs))
 
-CXXFLAGS += -g3 -O0 -pthread
+CXXFLAGS += -g0 -O3 -pthread
 UTFLAGS += -lgmock_main -lgmock -lgtest
 
-.PHONY: all clean ut
+.PHONY: all clean install
 
 all: $(targets)
 clean:
 	$(RM) $(targets) $(objs)
+install:
+	mkdir -p $(prefix)/lib
+	install $(coaplib_fullname) $(prefix)/lib
+	ln -sf $(coaplib_soname) $(coaplib) $(prefix)/lib
 
 %.so:%.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -fPIC -c $< -o $@
@@ -32,12 +39,11 @@ clean:
 %.o:%.cc
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
-$(coaplib_full)_objs=coap_encode.so coap_parse.so coap_misc.so fprintbuf.so
-$(coaplib_full):$($(coaplib_full)_objs)
-	$(CC) $(LDFLAGS) -o $@ -shared -Wl,-soname=$(coapsoname) $($(coaplib_full)_objs)
+$(coaplib_fullname)_objs=coap_encode.so coap_parse.so coap_misc.so fprintbuf.so 
+$(coaplib_fullname):$($(coaplib_fullname)_objs)
+	$(CC) $(LDFLAGS) -o $@ -shared -Wl,-soname=$(coaplib_soname) $($(coaplib_fullname)_objs)
 
-#coap_ut_objs=coap_ut.o coap_encode.o coap_parse.o coap_misc.o fprintbuf.o
-ut_objs=coap_ut.o $(coaplib_full)
+ut_objs=coap_ut.o $(coaplib_fullname)
 ut_libs=
 ut: $(ut_objs)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(ut_objs) $(ut_libs) $(UTFLAGS)
@@ -205,7 +211,7 @@ coap_ut.o: /usr/include/gmock/gmock-generated-nice-strict.h
 coap_ut.o: /usr/include/gmock/gmock-generated-matchers.h
 coap_ut.o: /usr/include/gmock/gmock-more-actions.h
 coap_ut.o: /usr/include/gmock/gmock-more-matchers.h fprintbuf.h
-coap_ut.o: coap_parse_ut.cc fprintbuf_ut.cc
+coap_ut.o: coap_parse_ut.cc fprintbuf_ut.cc coap_sap_ut.cc
 fprintbuf_ut.o: /usr/include/gtest/gtest.h
 fprintbuf_ut.o: /usr/include/gtest/internal/gtest-internal.h
 fprintbuf_ut.o: /usr/include/gtest/internal/gtest-port.h /usr/include/ctype.h

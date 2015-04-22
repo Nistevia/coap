@@ -4,6 +4,7 @@
  * Disclaimer: (C) 2015 LUIS COLORADO.  All rights reserved.
  */
 
+#include "coap_sap_ut.cc"
 #include "coap_misc_ut.cc"
 #include "coap_encode_ut.cc"
 #include "coap_parse_ut.cc"
