@@ -7,7 +7,10 @@
 #include <gtest/gtest.h>
 #include <stdint.h>
 
-#include "coap.h"
+#include "coap_mock.hh"
+
+using ::testing::NotNull;
+using ::testing::Return;
 
 TEST(CoapParseUnsigned, Size4)
 {
@@ -51,6 +54,167 @@ TEST(CoapParseUnsigned, Size0)
 
     EXPECT_EQ(COAP_OK, coap_parse_unsigned(0, 0, &val));
     EXPECT_EQ(0x0, val);
+}
+
+TEST(CoapMsgInit, coapMsgInit) {
+    coap_msg msg;
+    memset(&msg, 0xA5, sizeof msg);
+    EXPECT_EQ(COAP_OK, coap_msg_init(&msg));
+    EXPECT_EQ(0, msg.c_pktdat);
+    EXPECT_EQ(0, msg.c_pktlen);
+    EXPECT_EQ(coap_typ_CON, msg.c_typ);
+    EXPECT_EQ(0, msg.c_tokdat);
+    EXPECT_EQ(0, msg.c_toklen);
+    EXPECT_EQ(0, msg.c_code);
+    EXPECT_EQ(0, msg.c_msgid);
+    EXPECT_EQ(0, msg.c_plddat);
+    EXPECT_EQ(0, msg.c_pldlen);
+    EXPECT_EQ(0, msg.c_optssz);
+}
+
+struct CoapMsgAddOpt: ::testing::Test {
+    coap_msg            msg;
+    CoapMsgAddOpt() {
+        EXPECT_EQ(COAP_OK, coap_msg_init(&msg));
+    } /* Misc() */
+}; /* Misc */
+
+TEST_F(CoapMsgAddOpt, coapMsgAddOptOK) {
+    coap_opt o1, o2, *op;
+
+    o1.o_typ = 1;
+    o1.o_val = 0;
+    o1.o_len = 0;
+    o2.o_typ = 3;
+    o2.o_val = 0;
+    o2.o_len = 0;
+
+    EXPECT_EQ(0, msg.c_optssz);
+    EXPECT_EQ(0, LIST_ELEMENT_FIRST(&msg.c_optslst, coap_opt, o_nod));
+    EXPECT_EQ(0, LIST_ELEMENT_LAST(&msg.c_optslst, coap_opt, o_nod));
+
+    EXPECT_EQ(COAP_OK,
+            coap_msg_addopt(&msg, &o1));
+    EXPECT_EQ(1, msg.c_optssz);
+
+    /* RUN THE LIST, FORWARD */
+    op = LIST_ELEMENT_FIRST(&msg.c_optslst, coap_opt, o_nod);
+    EXPECT_EQ(&o1, op);
+    op = LIST_ELEMENT_NEXT(op, coap_opt, o_nod);
+    EXPECT_EQ(0, op);
+
+    /* ...backwards */
+    op = LIST_ELEMENT_LAST(&msg.c_optslst, coap_opt, o_nod);
+    EXPECT_EQ(&o1, op);
+    op = LIST_ELEMENT_PREV(op, coap_opt, o_nod);
+    EXPECT_EQ(0, op);
+
+    /* ADD ANOTHER OPTION */
+    EXPECT_EQ(COAP_OK,
+            coap_msg_addopt(&msg, &o2));
+    EXPECT_EQ(2, msg.c_optssz);
+
+    /* RUN THE LIST, FORWARD */
+    op = LIST_ELEMENT_FIRST(&msg.c_optslst, coap_opt, o_nod);
+    EXPECT_EQ(&o1, op);
+    op = LIST_ELEMENT_NEXT(op, coap_opt, o_nod);
+    EXPECT_EQ(&o2, op);
+    op = LIST_ELEMENT_NEXT(op, coap_opt, o_nod);
+    EXPECT_EQ(0, op);
+
+    /* ... and backwards */
+    op = LIST_ELEMENT_LAST(&msg.c_optslst, coap_opt, o_nod);
+    EXPECT_EQ(&o2, op);
+    op = LIST_ELEMENT_PREV(op, coap_opt, o_nod);
+    EXPECT_EQ(&o1, op);
+    op = LIST_ELEMENT_PREV(op, coap_opt, o_nod);
+    EXPECT_EQ(0, op);
+}
+
+TEST_F(CoapMsgAddOpt, coapMsgAddOptERROR) {
+    coap_opt o1, o2, *op;
+
+    o1.o_typ = 3;
+    o1.o_val = 0;
+    o1.o_len = 0;
+    o2.o_typ = 1;
+    o2.o_val = 0;
+    o2.o_len = 0;
+
+    EXPECT_EQ(0, msg.c_optssz);
+    EXPECT_EQ(0, LIST_ELEMENT_FIRST(&msg.c_optslst, coap_opt, o_nod));
+    EXPECT_EQ(0, LIST_ELEMENT_LAST(&msg.c_optslst, coap_opt, o_nod));
+
+    EXPECT_EQ(COAP_OK,
+            coap_msg_addopt(&msg, &o1));
+    EXPECT_EQ(1, msg.c_optssz);
+
+    /* RUN THE LIST, FORWARD */
+    op = LIST_ELEMENT_FIRST(&msg.c_optslst, coap_opt, o_nod);
+    EXPECT_EQ(&o1, op);
+    op = LIST_ELEMENT_NEXT(op, coap_opt, o_nod);
+    EXPECT_EQ(0, op);
+
+    /* ...backwards */
+    op = LIST_ELEMENT_LAST(&msg.c_optslst, coap_opt, o_nod);
+    EXPECT_EQ(&o1, op);
+    op = LIST_ELEMENT_PREV(op, coap_opt, o_nod);
+    EXPECT_EQ(0, op);
+
+    /* ADD ANOTHER OPTION */
+    EXPECT_EQ(COAP_INVALID_PARAMETER,
+            coap_msg_addopt(&msg, &o2));
+    EXPECT_EQ(1, msg.c_optssz);
+
+    /* RUN THE LIST, FORWARD */
+    op = LIST_ELEMENT_FIRST(&msg.c_optslst, coap_opt, o_nod);
+    EXPECT_EQ(&o1, op);
+    op = LIST_ELEMENT_NEXT(op, coap_opt, o_nod);
+    EXPECT_EQ(0, op);
+
+    /* ... and backwards */
+    op = LIST_ELEMENT_LAST(&msg.c_optslst, coap_opt, o_nod);
+    EXPECT_EQ(&o1, op);
+    op = LIST_ELEMENT_PREV(op, coap_opt, o_nod);
+    EXPECT_EQ(0, op);
+}
+
+TEST_F(CoapMsgAddOpt, coapMsgOptIteratorFuncs)
+{
+    coap_opt o1, o2, *op;
+
+    o1.o_typ = 1;
+    o1.o_val = 0;
+    o1.o_len = 0;
+    o2.o_typ = 3;
+    o2.o_val = 0;
+    o2.o_len = 0;
+
+    /* BASIC CHECKS */
+    EXPECT_EQ(0,    coap_msg_fstopt(&msg));
+    EXPECT_EQ(0,    coap_msg_lstopt(&msg));
+
+    /* ADD ONE OPTION */
+    EXPECT_EQ(COAP_OK,
+            coap_msg_addopt(&msg, &o1));
+
+    /* CHECKS */
+    EXPECT_EQ(&o1,  coap_msg_fstopt(&msg));
+    EXPECT_EQ(&o1,  coap_msg_lstopt(&msg));
+    EXPECT_EQ(0,    coap_msg_nxtopt(&o1));
+    EXPECT_EQ(0,    coap_msg_prvopt(&o1));
+            
+    /* ADD ANOTHER OPTION */
+    EXPECT_EQ(COAP_OK,
+            coap_msg_addopt(&msg, &o2));
+
+    /* CHECKS */
+    EXPECT_EQ(&o1,  coap_msg_fstopt(&msg));
+    EXPECT_EQ(&o2,  coap_msg_nxtopt(&o1));
+    EXPECT_EQ(0,    coap_msg_nxtopt(&o2));
+    EXPECT_EQ(&o2,  coap_msg_lstopt(&msg));
+    EXPECT_EQ(&o1,  coap_msg_prvopt(&o2));
+    EXPECT_EQ(0,    coap_msg_prvopt(&o1));
 }
 
 struct CoapParse: ::testing::Test {

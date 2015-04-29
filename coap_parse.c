@@ -24,6 +24,72 @@ coap_parse_unsigned(
     return COAP_OK;
 } /* coap_parse_unsigned */
    
+coap_err
+coap_msg_init(
+        coap_msg       *tgt)
+{
+    static coap_msg src = {0};
+    DEB(D("BEGIN\n"));
+
+    *tgt = src;
+
+    DEB(D("RETURN ==> COAP_OK\n"));
+    return COAP_OK;
+} /* coap_msg_init */
+
+coap_err
+coap_msg_addopt(
+        coap_msg       *tgt,
+        coap_opt       *opt)
+{
+    coap_opt   *last;
+    uint16_t    lasttyp;
+
+    DEB(D("BEGIN(opt=%d, len=%d)\n"), opt->o_typ, opt->o_len);
+    last = LIST_ELEMENT_LAST(&tgt->c_optslst, coap_opt, o_nod);
+    lasttyp = last ? last->o_typ : 0;
+    if (opt->o_typ < lasttyp) {
+        DEB(D("RETURN ==> COAP_INVALID_PARAMETER(o_typ=%d)\n"),
+                opt->o_typ);
+        return COAP_INVALID_PARAMETER;
+    } /* if */
+
+    LIST_APPEND(&tgt->c_optslst, &opt->o_nod);
+    tgt->c_optssz++;
+
+    DEB(D("RETURN ==> COAP_OK\n"));
+    return COAP_OK;
+
+} /* coap_msg_addopt */
+
+coap_opt
+*coap_msg_fstopt(
+        coap_msg       *tgt)
+{
+    return LIST_ELEMENT_FIRST(&tgt->c_optslst, coap_opt, o_nod);
+}
+
+coap_opt
+*coap_msg_lstopt(
+        coap_msg       *tgt)
+{
+    return LIST_ELEMENT_LAST(&tgt->c_optslst, coap_opt, o_nod);
+}
+
+coap_opt
+*coap_msg_nxtopt(
+        coap_opt       *opt)
+{
+    return LIST_ELEMENT_NEXT(opt, coap_opt, o_nod);
+}
+
+coap_opt
+*coap_msg_prvopt(
+        coap_opt       *opt)
+{
+    return LIST_ELEMENT_PREV(opt, coap_opt, o_nod);
+}
+
 /* The next macro is to process the Options of a CoAP message.
  * It acts on the values taken from the OptDelta and OptLength
  * fields of the first byte from the option field. */
@@ -57,6 +123,7 @@ coap_parse(
         coap_msg       *tgt)
 {
     uint32_t opt_name = 0;
+    static coap_msg initial = {0};
 
     DEB(D("BEGIN\n"));
     PRB(bufsz, buff, D("PACKET (size = %d bytes)"), bufsz);
@@ -67,7 +134,7 @@ coap_parse(
     /* check we have enough buffer to parse */
     CHK(COAP_HDR_LEN);
 
-    coap_msg_init(tgt); /* initialize structure */
+    *tgt = initial; /* initialize structure */
     tgt->c_pktdat = buff; /* pointer to packet data */
     tgt->c_pktlen = 0;
 

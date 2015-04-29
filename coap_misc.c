@@ -19,19 +19,6 @@ coap_typ2str(coap_typ typ)
 } /* tgt2typ */
 
 coap_err
-coap_msg_init(
-        coap_msg       *tgt)
-{
-    static coap_msg src = {0};
-    DEB(D("BEGIN\n"));
-
-    *tgt = src;
-
-    DEB(D("RETURN ==> COAP_OK\n"));
-    return COAP_OK;
-} /* coap_msg_init */
-
-coap_err
 coap_msg_settype(
         coap_msg       *tgt,
         coap_typ        typ)
@@ -111,56 +98,3 @@ coap_msg_setmsgid(
     DEB(D("RETURN ==> COAP_OK\n"));
     return COAP_OK;
 } /* coap_msg_setmsgid */
-
-coap_err
-coap_msg_addopt(
-        coap_msg       *tgt,
-        coap_opt       *opt)
-{
-    coap_opt   *last;
-    uint16_t    lasttyp;
-
-    DEB(D("BEGIN(opt=%d, len=%d)\n"), opt->o_typ, opt->o_len);
-    last = LIST_ELEMENT_LAST(&tgt->c_optslst, coap_opt, o_nod);
-    lasttyp = last ? last->o_typ : 0;
-    if (opt->o_typ < lasttyp) {
-        DEB(D("RETURN ==> COAP_INVALID_PARAMETER(o_typ=%d)\n"),
-                opt->o_typ);
-        return COAP_INVALID_PARAMETER;
-    } /* if */
-
-    LIST_APPEND(&tgt->c_optslst, &opt->o_nod);
-    tgt->c_optssz++;
-
-    DEB(D("RETURN ==> COAP_OK\n"));
-    return COAP_OK;
-
-} /* coap_msg_addopt */
-
-coap_opt
-*coap_msg_fstopt(
-        coap_msg       *tgt)
-{
-    return LIST_ELEMENT_FIRST(&tgt->c_optslst, coap_opt, o_nod);
-}
-
-coap_opt
-*coap_msg_lstopt(
-        coap_msg       *tgt)
-{
-    return LIST_ELEMENT_LAST(&tgt->c_optslst, coap_opt, o_nod);
-}
-
-coap_opt
-*coap_msg_nxtopt(
-        coap_opt       *opt)
-{
-    return LIST_ELEMENT_NEXT(opt, coap_opt, o_nod);
-}
-
-coap_opt
-*coap_msg_prvopt(
-        coap_opt       *opt)
-{
-    return LIST_ELEMENT_PREV(opt, coap_opt, o_nod);
-}

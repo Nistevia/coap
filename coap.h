@@ -146,10 +146,12 @@ typedef struct coap_sap_s {
     pthread_t           sap_thread; /* thread associated to this sap */
 } coap_sap;
 
+#if 0
 coap_err
 new_coap_sap(
         struct sockaddr_in *bind,   /* local socket to bind */
         coap_sap *sap);             /* coap_sap to init with data */
+#endif
 
 char *
 coap_typ2str(

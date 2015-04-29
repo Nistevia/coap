@@ -2,5 +2,10 @@
 *.so
 *.so.*
 *.out
+libcoap.a
 coap_encode_test
 ut
+coap_misc_ut
+coap_parse_ut
+coap_encode_ut
+fprintbuf_ut

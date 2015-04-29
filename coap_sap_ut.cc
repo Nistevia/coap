@@ -20,7 +20,9 @@ struct CoapSAP: ::testing::Test {
 
 }; /* CoapSAP */
 
+#if 0
 TEST_F(CoapSAP, newCoapSAP) {
     EXPECT_EQ(COAP_OK, 
             new_coap_sap(&sa, &sap));
 }
+#endif
