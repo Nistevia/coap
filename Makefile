@@ -10,7 +10,7 @@ coaplib=libcoap.so
 coapsoname=$(coaplib).$(coaplib_MAJOR)
 coaplib_full=$(coapsoname).$(coaplib_MINOR)
 
-targets= ut $(coaplib_full)
+targets= $(coaplib_full) ut
 
 objs=$(foreach i, $(targets), $($(i)_objs))
 
