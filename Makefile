@@ -11,7 +11,7 @@ targets= $(coaplib) $(coapslib) ut
 coaplib=libcoap.so
 coaplib_soname=$(coaplib).$(coaplib_MAJOR)
 coaplib_fullname=$(coaplib_soname).$(coaplib_MINOR)
-coaplib_objs=coap_encode.so coap_parse.so coap_misc.so fprintbuf.so
+coaplib_objs=coap_encode.so coap_parse.so coap_misc.so
 
 coapslib=libcoap.a
 coapslib_objs=$(coaplib_objs:.so=.o)
@@ -24,7 +24,6 @@ toclean += $(targets) $(coaplib_soname) $(coaplib_fullname) \
 toclean += $(coaplib_objs:.so=_ut) $(coaplib_objs:.so=_ut.o)
 
 prefix=/usr
-
 
 objs=$(foreach i, $(targets), $($(i)_objs))
 
@@ -60,7 +59,7 @@ $(coapslib):$(coapslib)($(coapslib_objs))
 %.o:%.cc
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
-ut: $(ut_objs)
+ut: $(ut_objs) 
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(ut_objs) $(ut_libs) $(UTFLAGS)
 
 uts:
