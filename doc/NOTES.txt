@@ -1,0 +1,10 @@
+===========================================================
+Wed Sep  9 16:54:50 EEST 2015
+
+> CONfirmed messages need some kind of transaction processing and
+> retransmission with exponential backoff to be manageable.
+> 
+> Only CONfirmed messages are acknowledged and retransmitted.  We
+> need some checking so we don't allow CONfirmed messages to be
+> sent to a multicast address.
+===========================================================
