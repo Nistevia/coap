@@ -6,3 +6,8 @@ Wed Sep  9 17:06:05 EEST 2015
 > if a CONfirmed request can be reply piggybacked or must
 > be ACKnowledged separately from the request.
 ===========================================================
+Mon Sep 14 09:39:01 EEST 2015
+
+> I have decided to rewrite everything in C++, as there
+> will be too many object classes involved.
+===========================================================
