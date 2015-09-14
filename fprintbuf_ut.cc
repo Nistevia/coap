@@ -15,6 +15,7 @@ TEST(Misc, zeroLengthBuffer) {
 
     EXPECT_LT(0,
             res = fprintbuf(stdout,
+                0,
                 0, 0,
                 "TEST (%d bytes)",
                 0));
@@ -27,6 +28,7 @@ TEST(Misc, lessThanARowBuffer) {
 
     EXPECT_LT(0,
             res = fprintbuf(stdout,
+                0,
                 sizeof buf, buf,
                 "TEST (%d bytes)",
                 sizeof buf));
@@ -43,6 +45,7 @@ TEST(Misc, moreThanARowBuffer) {
 
     EXPECT_LT(0,
             res = fprintbuf(stdout,
+                0,
                 sizeof buf, buf,
                 "TEST (%d bytes)",
                 sizeof buf));

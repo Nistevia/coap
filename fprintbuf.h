@@ -40,7 +40,8 @@ static char FPRINTBUF_H_RCSId[] = "\n$Id: fprintbuf.h,v 2.0 2005-10-04 14:54:49 
 /* prototypes */
 size_t fprintbuf (
     FILE               *f,	    /* fichero de salida */
-	int                 t,	    /* tamano del buffer */
+    off_t               o,      /* initial offset */
+	size_t              t,	    /* tamano del buffer */
 	const uint8_t      *b,      /* puntero al buffer */
 	const char         *fmt,    /* rotulo de cabecera */
                         ...);

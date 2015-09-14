@@ -17,12 +17,13 @@ static char *id = "$Id: fprintbuf.c,v 2.0 2005-10-04 14:54:49 luis Exp $\n";
 size_t
 fprintbuf(
         FILE           *f,      /* fichero de salida */
-	    int             t,      /* tamano del buffer */
+        off_t           off,    /* initial offset */
+	    size_t          t,      /* tamano del buffer */
 	    const uint8_t  *b,      /* puntero al buffer */
 	    const char     *fmt,    /* rotulo de cabecera */
                         ...)
 {
-	size_t off, i;
+	size_t i;
 	uint8_t c;
 	va_list lista;
 	size_t escritos = 0;
@@ -33,7 +34,6 @@ fprintbuf(
 	escritos += vfprintf (f, fmt, lista);
 	va_end (lista);
 	escritos += fprintf (f, "\n");
-	off = 0;
 	while (t > 0) {
 		escritos += fprintf (f, "%08lx : ", off);
 		for (i = 0; i < TAM_REG; i++) {
